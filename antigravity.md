@@ -46,21 +46,29 @@ Toda la lógica profunda del proyecto ha sido extraída a la carpeta `docs/`. **
 12. **[Plan de Desarrollo: Backend](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/02-plan-desarrollo-backend.md)**
 13. **[Plan de Desarrollo: Frontend](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/03-plan-desarrollo-frontend.md)**
 
+### 📌 Seguimiento Operativo
+14. **[Backlog](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md):** qué se hizo, qué sigue, decisiones pendientes y deuda técnica — se actualiza con cada hito. El tracker de la Sección 4 abajo es solo el resumen ejecutivo; el Backlog es la fuente viva.
+
 *(Nota: Los scripts usados para la limpieza inicial de los Excel y migración están en la carpeta `scripts/`)*.
+
+---
+
+## 🔗 Enlaces
+*   **Repositorio:** [github.com/NicolasPlata/estadistica-delictiva-colombia](https://github.com/NicolasPlata/estadistica-delictiva-colombia) (rama `main`)
+*   **Mockups (Figma):** [estadistica_delicitva](https://www.figma.com/design/NJXIriyDT674hHetseeX0B/estadistica_delicitva)
 
 ---
 
 ## 🚀 4. Estado Actual y Hoja de Ruta (Tracker)
 
-**Contexto Inmediato:** Toda la información estadística y geográfica ya ha sido limpiada, estandarizada y migrada a PostgreSQL (`estadistica_delictiva` y `municipios_geo`). El diseño documental está completado. Estamos listos para comenzar la escritura de código en el Backend.
+**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` tras una auditoría — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens, Archive) están terminados y reconciliados entre sí. El repositorio está inicializado y pusheado. Arrancamos la Fase 1 del Backend.
 
 - [x] **Fase 1: ETL y Estandarización de Datos** (Finalizada)
-- [x] **Fase 2: Base de Datos, PostGIS y Arquitectura Documental** (Finalizada)
-- [ ] **Fase 3: Desarrollo del Backend en Rust** 📍 *(<- ESTAMOS AQUÍ)*
-  - [ ] **Hito 3.1:** Inicializar proyecto con `cargo new` y dependencias (`sqlx`, `axum`, `tokio`).
-  - [ ] **Hito 3.2:** Conexión a PostgreSQL (PgPool) y Health Check.
-  - [ ] **Hito 3.3:** Modelos de Datos (Structs) y endpoint `/api/v1/metadata/delitos`.
-  - [ ] **Hito 3.4:** Endpoints de KPIs Analíticos y de Evolución (Barras).
-  - [ ] **Hito 3.5:** Endpoint Geoespacial con PostGIS (MVT / GeoJSON).
-- [ ] **Fase 4: Desarrollo del Frontend en React** (Pendiente)
+- [x] **Fase 2: Base de Datos, PostGIS y Arquitectura Documental** (Finalizada, incluye migración correctiva post-auditoría)
+- [x] **Fase 2.5: Sistema de Diseño y Mockups** (Finalizada — tokens Light/Dark reconciliados, 5 pantallas de Flow Screens en Figma)
+- [x] **Fase 2.6: Repositorio Git** (Finalizada — monorepo inicializado, Clean Architecture documentada, `.gitignore`/`README`/`LICENSE`)
+- [ ] **Fase 3: Desarrollo del Backend en Rust** 📍 *(<- ESTAMOS AQUÍ)* — detalle de Hitos en [`docs/plans/02-plan-desarrollo-backend.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/02-plan-desarrollo-backend.md), progreso granular en [`BACKLOG.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md).
+- [ ] **Fase 4: Desarrollo del Frontend en React** (Pendiente) — [`docs/plans/03-plan-desarrollo-frontend.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/03-plan-desarrollo-frontend.md)
 - [ ] **Fase 5: Despliegue e Integración Final** (Pendiente)
+
+*(Se abandona la numeración detallada de Hitos 3.1-3.5 que vivía aquí — ya no coincidía con la estructura real de `docs/plans/02-...`. Ese documento y `BACKLOG.md` son ahora la única fuente de verdad para el detalle, evitando que este tracker se desactualice de nuevo.)*
