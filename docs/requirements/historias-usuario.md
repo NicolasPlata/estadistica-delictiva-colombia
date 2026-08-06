@@ -109,3 +109,15 @@ El siguiente documento detalla el comportamiento de la aplicación desde la pers
   - Al aislar una región, el Dashboard debe mostrar un gráfico de barras (Bar Chart) donde cada barra representa un año.
   - Se debe permitir apreciar visualmente la tendencia ascendente o descendente de manera muy clara.
   - El título del gráfico debe actualizarse dinámicamente indicando la región seleccionada (Ej. "Evolución Anual - Antioquia").
+
+### HU-3.04: Comparación Paralela de Regiones o Periodos (RF-09)
+**Como** analista territorial  
+**Quiero** activar un modo de comparación dentro del panel de evolución (HU-3.03) y elegir si comparo dos regiones o dos rangos de periodo  
+**Para** contrastar visualmente dos series sin tener que memorizar o alternar entre pantallas.  
+* **Criterios de Aceptación:**
+  - Un control "Comparar" dentro del panel de evolución activa el modo comparación, con un selector "Por Región" / "Por Periodo".
+  - **Por Región:** el usuario elige una segunda región (departamento o municipio); el resto de filtros (años, delito, género, etc.) se mantienen iguales para ambas series.
+  - **Por Periodo:** el usuario elige un segundo rango de años; el resto de filtros se mantienen iguales para ambas series, region incluida.
+  - El gráfico de evolución superpone ambas series (Serie A / Serie B) con colores distintos y una leyenda — no dos gráficos separados, para permitir comparación visual directa punto a punto.
+  - No requiere cambios en el backend: cada serie se obtiene con una llamada independiente a `POST /api/v1/stats/evolution` (y opcionalmente `/stats/kpi`) con su propio `GlobalFilters` — el comparador vive enteramente en el frontend.
+  - Los colores de Serie A/Serie B son fijos y reservados para este uso (no se reutilizan en otro contexto de la app) — ver `docs/design/00-design-system.md`.

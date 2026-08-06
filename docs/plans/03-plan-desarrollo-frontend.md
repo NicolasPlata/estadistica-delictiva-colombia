@@ -71,6 +71,10 @@ Igual que en el backend (ver `docs/plans/02-plan-desarrollo-backend.md`), la ló
 *   **Hito 4.2: Gráficos de Evolución Regional**
     *   Instalar librería de gráficos (ej. `Recharts`, `Chart.js` o `Nivo`).
     *   Crear el componente `EvolutionBarChart` que aparecerá en un panel flotante inferior o modal no obstructivo cuando el usuario haga clic en un territorio (HU-3.03).
+*   **Hito 4.3: Comparación Paralela (HU-3.04, RF-09)**
+    *   Agregar el control "Comparar" al panel de evolución del Hito 4.2, con selector "Por Región" / "Por Periodo".
+    *   Sin cambios de backend: cada serie sale de su propia llamada a `POST /api/v1/stats/evolution` con un `GlobalFilters` independiente — el estado de comparación (Serie A/B) vive en el store del cliente.
+    *   Superponer ambas series en el mismo gráfico (no dos gráficos separados) usando los tokens `comparacion-serie-a`/`comparacion-serie-b` de `docs/design/00-design-system.md` — reservados exclusivamente para este uso.
 
 ---
 

@@ -83,6 +83,21 @@ Ambos archivos piden en su sección de Componentes chips de estado en verde/rojo
 
 ⚠️ = por debajo de 3:1 en claro **por diseño** (igual que en el default del skill) — estos dos **siempre** van acompañados de ícono + etiqueta de texto, nunca de color solo, tal como exige HU-3.03 y el propio criterio de accesibilidad del skill de dataviz.
 
+## ✅ Reconciliación 4 — Paleta categórica para comparación (HU-3.04, RF-09)
+
+**Problema:** RF-09 ("comparar visualmente datos de diferentes periodos o regiones de manera paralela") no tenía ningún token asociado — ni la rampa de choropleth (es secuencial, para magnitud) ni la paleta de estado (reservada a good/warning/serious/critical) sirven para esto: comparar dos regiones/periodos es **identidad** (Serie A vs. Serie B), no magnitud ni estado, así que corresponde una paleta **categórica** de 2 colores por el criterio del skill de dataviz.
+
+Se usan los slots 1 (azul) y 2 (naranja) de la paleta categórica default del skill — ya validados como par adyacente en su documentación — recalculados contra las superficies reales de este proyecto:
+
+| Rol | Claro | Oscuro |
+|---|---|---|
+| `comparacion-serie-a` | `#2a78d6` | `#3987e5` |
+| `comparacion-serie-b` | `#eb6834` | `#d95926` |
+
+*Validación (`--mode <light\|dark> --surface <superficie real>`):* ambos pasan los 5 checks categóricos en los dos temas — banda de luminosidad, piso de croma, separación CVD (ΔE 24.7-26.8, muy por encima del objetivo de 8), piso de visión normal (ΔE 31.8-33.6) y contraste ≥3:1 contra `surface-canvas`.
+
+**Regla de uso:** estos 2 colores están **reservados** para HU-3.04 (comparación) — no se reutilizan como "serie 3" en ningún otro gráfico ni como acento decorativo, siguiendo la regla del skill de "el color sigue a la entidad, nunca a su rango".
+
 ---
 
 ## Tipografía, Radios y Espaciado
