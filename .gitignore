@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Datos crudos (200MB+, no se versionan — ver docs/plans/01-plan-estandarizacion-migracion.md)
+Data/
+
+# Python (ETL)
+venv/
+__pycache__/
+*.pyc
+
+# Rust (backend/) — Cargo.lock SÍ se versiona (es un binario/aplicación, no una librería)
+backend/target/
+
+# Node (frontend/)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
