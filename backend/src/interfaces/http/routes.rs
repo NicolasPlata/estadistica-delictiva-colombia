@@ -5,12 +5,14 @@ use axum::{
 
 use super::handlers;
 use crate::infrastructure::postgres_filtros_repository::PgFiltrosRepository;
+use crate::infrastructure::postgres_geometry_repository::PgGeometryRepository;
 use crate::infrastructure::postgres_stats_repository::PgStatsRepository;
 
 #[derive(Clone)]
 pub struct AppState {
     pub filtros_repo: PgFiltrosRepository,
     pub stats_repo: PgStatsRepository,
+    pub geometry_repo: PgGeometryRepository,
 }
 
 pub fn build_router(state: AppState) -> Router {
@@ -25,6 +27,11 @@ pub fn build_router(state: AppState) -> Router {
             "/api/v1/stats/evolution",
             post(handlers::get_evolution_stats),
         )
+        .route(
+            "/api/v1/map/geometry/{granularidad}",
+            get(handlers::get_map_geometry),
+        )
+        .route("/api/v1/map/stats", post(handlers::get_map_stats))
         .with_state(state)
 }
 
@@ -42,7 +49,8 @@ mod tests {
         let pool = db::build_pool_lazy("postgres://user:pass@localhost/db").unwrap();
         AppState {
             filtros_repo: PgFiltrosRepository::new(pool.clone()),
-            stats_repo: PgStatsRepository::new(pool),
+            stats_repo: PgStatsRepository::new(pool.clone()),
+            geometry_repo: PgGeometryRepository::new(pool),
         }
     }
 
@@ -55,7 +63,8 @@ mod tests {
             .expect("requiere PostgreSQL corriendo con las credenciales de .env");
         AppState {
             filtros_repo: PgFiltrosRepository::new(pool.clone()),
-            stats_repo: PgStatsRepository::new(pool),
+            stats_repo: PgStatsRepository::new(pool.clone()),
+            geometry_repo: PgGeometryRepository::new(pool),
         }
     }
 
@@ -226,5 +235,93 @@ mod tests {
         let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["region_label"], "Nacional");
+    }
+
+    /// Test de integración: confirma la forma del GeoJSON (`02-api-contracts.md`
+    /// §3.1) y que las cabeceras de cacheo (Hito 4.1, RNF-08) están presentes.
+    #[tokio::test]
+    async fn map_geometry_endpoint_returns_geojson_with_cache_headers() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/map/geometry/MUNICIPIO")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+        assert_eq!(
+            response.headers().get("cache-control").unwrap(),
+            "public, max-age=86400"
+        );
+        assert!(response.headers().get("etag").is_some());
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["type"], "FeatureCollection");
+        assert_eq!(json["features"].as_array().unwrap().len(), 1122);
+    }
+
+    #[tokio::test]
+    async fn map_geometry_endpoint_departamento_has_33_features() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/v1/map/geometry/DEPARTAMENTO")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["features"].as_array().unwrap().len(), 33);
+    }
+
+    /// Test de integración: `POST /api/v1/map/stats` — confirma la forma
+    /// del contrato (`02-api-contracts.md` §3.2) y que las claves del `data`
+    /// coinciden en formato con la propiedad `codigo_dane` de la geometría
+    /// departamental (ambas sin ceros a la izquierda).
+    #[tokio::test]
+    async fn map_stats_endpoint_returns_contract_shaped_json() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/map/stats")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({
+                            "filters": { "anio_inicio": 2023, "anio_fin": 2023 },
+                            "granularidad": "DEPARTAMENTO"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["granularidad"], "DEPARTAMENTO");
+        // Bogotá, D.C.: dpto_codigo=11, sin ceros a la izquierda.
+        assert!(json["data"]["11"].as_i64().unwrap() > 0);
     }
 }

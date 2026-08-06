@@ -5,6 +5,7 @@ mod interfaces;
 
 use infrastructure::{
     config::AppConfig, db, postgres_filtros_repository::PgFiltrosRepository,
+    postgres_geometry_repository::PgGeometryRepository,
     postgres_stats_repository::PgStatsRepository,
 };
 use interfaces::http::routes::AppState;
@@ -19,7 +20,8 @@ async fn main() {
 
     let state = AppState {
         filtros_repo: PgFiltrosRepository::new(pool.clone()),
-        stats_repo: PgStatsRepository::new(pool),
+        stats_repo: PgStatsRepository::new(pool.clone()),
+        geometry_repo: PgGeometryRepository::new(pool),
     };
 
     let app = interfaces::http::build_router(state);

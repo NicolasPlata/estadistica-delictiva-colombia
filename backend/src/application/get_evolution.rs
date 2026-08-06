@@ -99,6 +99,13 @@ mod tests {
                 cantidad: 100,
             }])
         }
+        async fn map_stats(
+            &self,
+            _filters: &GlobalFilters,
+            _granularidad: crate::domain::granularidad::Granularidad,
+        ) -> Result<HashMap<String, i64>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_evolution")
+        }
     }
 
     #[tokio::test]

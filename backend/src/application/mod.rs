@@ -2,5 +2,7 @@
 
 pub mod get_evolution;
 pub mod get_filtros;
+pub mod get_geometry;
 pub mod get_kpis;
+pub mod get_map_stats;
 pub mod ports;

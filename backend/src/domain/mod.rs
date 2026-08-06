@@ -3,5 +3,7 @@
 
 pub mod evolution;
 pub mod filters;
+pub mod granularidad;
 pub mod kpis;
+pub mod map_stats;
 pub mod vocabulario;

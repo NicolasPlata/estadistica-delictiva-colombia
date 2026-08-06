@@ -13,10 +13,19 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 4 (`docs/plans/02-plan-desarrollo-backend.md`): endpoints geoespaciales — `GET /api/v1/map/geometry/{granularidad}` y `POST /api/v1/map/stats`.
-- [ ] Backend — Fase 5: middleware CORS, manejo de errores estandarizado, profiling.
+- [ ] Backend — Fase 5 (`docs/plans/02-plan-desarrollo-backend.md`): middleware CORS, manejo de errores estandarizado, profiling con `EXPLAIN ANALYZE`.
+- [ ] Backend completo → arrancar Frontend (`docs/plans/03-plan-desarrollo-frontend.md`).
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 4: Motor Geoespacial (`GET /api/v1/map/geometry/{granularidad}`, `POST /api/v1/map/stats`) — TDD, Backend funcionalmente completo**
+- `domain::granularidad::Granularidad` (DEPARTAMENTO/MUNICIPIO) y `domain::map_stats::MapStats`.
+- **Hallazgo real durante el TDD, no anticipado en el plan:** la primera implementación de `GET /api/v1/map/geometry/MUNICIPIO` fallaba contra la base de datos real con `total size of jsonb array elements exceeds the maximum of 268435455 bytes` — los 1,122 polígonos municipales a resolución de levantamiento original superan el límite de 256MB por valor `jsonb` de Postgres al armarse en un solo `jsonb_agg`. Corregido aplicando `ST_SimplifyPreserveTopology(geom, 0.001)` antes de `ST_AsGeoJSON` — exactamente lo que RN-09 ya exigía ("geometría simplificada y cuantizada") pero que no se había implementado hasta chocar con el límite real. Payload final: ~6.2MB para el país completo (antes: >256MB, ni siquiera llegaba a responder).
+- `PgGeometryRepository`: arma el `FeatureCollection` completo en SQL (`jsonb_build_object`/`jsonb_agg`/`ST_Union` para dissolver municipios en departamentos) — Rust solo pasa el JSON ya ensamblado, sin reserializar (decisión explícita del Hito 4.1). Nuevo trait `GeometryRepository`, separado de `StatsRepository` porque no depende de `GlobalFilters` (ADR 0002).
+- `StatsRepository::map_stats`: reutiliza el `apply_filters` del Hito 3.1; agrupa por `dpto_codigo` o `codigo_dane` según `granularidad` (Hito 4.2). Test de integración usa que Bogotá, D.C. es su propio departamento Y su único municipio para verificar una invariante exacta entre ambas granularidades.
+- Endpoint de geometría con cabeceras `Cache-Control: public, max-age=86400` y `ETag` (hash del contenido, no fijo) — RNF-08.
+- **Verificado a mano el punto más delicado de todo ADR 0002:** los códigos de departamento que devuelve `map/geometry` (`5`, `8`, `11`...) coinciden en formato exacto con las claves de `map/stats` (`"5"`, `"8"`, `"11"`...) — el join por `codigo_dane` en el cliente funcionará sin repetir el bug de formato que se corrigió a nivel de base de datos al principio del proyecto.
+- 63/63 tests en verde (14 nuevos). **Backend funcionalmente completo** — quedan solo refinamientos de Fase 5 (CORS, errores estandarizados, profiling) antes de pasar al frontend.
 
 **2026-08-06 — Backend Fase 3, Hito 3.2: Endpoint de Evolución (`POST /api/v1/stats/evolution`) — TDD, Fase 3 completa**
 - `domain::evolution`: `Agrupacion` (ANUAL/MENSUAL, deserializado desde mayúsculas), `EvolutionPoint`, `Evolution`.

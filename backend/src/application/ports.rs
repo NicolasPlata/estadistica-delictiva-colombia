@@ -3,6 +3,7 @@ use std::fmt;
 
 use crate::domain::evolution::{Agrupacion, EvolutionPoint};
 use crate::domain::filters::GlobalFilters;
+use crate::domain::granularidad::Granularidad;
 use crate::domain::vocabulario::FiltrosVocabulario;
 
 /// Error de repositorio, sin depender de `sqlx` (esa conversión vive en
@@ -57,4 +58,31 @@ pub trait StatsRepository {
         filters: &GlobalFilters,
         agrupacion: Agrupacion,
     ) -> Result<Vec<EvolutionPoint>, RepositoryError>;
+
+    /// `{codigo: cantidad}` para el choropleth (HU-1.02), agrupado por
+    /// `dpto_codigo` o `codigo_dane` según `granularidad` — ver
+    /// `docs/plans/02-plan-desarrollo-backend.md` Hito 4.2 sobre por qué la
+    /// clave de agrupación no es siempre `codigo_dane`.
+    async fn map_stats(
+        &self,
+        filters: &GlobalFilters,
+        granularidad: Granularidad,
+    ) -> Result<HashMap<String, i64>, RepositoryError>;
+}
+
+/// Puerto para `GET /api/v1/map/geometry/{granularidad}` (ADR 0002): la
+/// geometría es estática y no depende de `GlobalFilters`, por eso vive en un
+/// trait separado de `StatsRepository` — consulta una tabla distinta
+/// (`municipios_geo`) con una forma de dato distinta (GeoJSON, no un
+/// número). El repositorio devuelve el `FeatureCollection` ya ensamblado
+/// como `serde_json::Value` en vez de un struct de dominio: la decisión de
+/// diseño (Hito 4.1) es que PostGIS arme el JSON completo en SQL
+/// (`jsonb_build_object`/`jsonb_agg`) para minimizar el procesamiento y
+/// consumo de RAM en Rust — no hay nada que un struct tipado ganaría aquí
+/// que no sea reserializar trabajo que la base de datos ya hizo.
+pub trait GeometryRepository {
+    async fn get_geometry(
+        &self,
+        granularidad: Granularidad,
+    ) -> Result<serde_json::Value, RepositoryError>;
 }

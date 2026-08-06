@@ -5,6 +5,7 @@ use sqlx::{PgPool, Postgres, QueryBuilder, Row};
 use crate::application::ports::{RepositoryError, StatsRepository};
 use crate::domain::evolution::{Agrupacion, EvolutionPoint};
 use crate::domain::filters::GlobalFilters;
+use crate::domain::granularidad::Granularidad;
 
 /// Encadena las cláusulas `WHERE` correspondientes a los campos presentes
 /// de `GlobalFilters` sobre un `QueryBuilder` ya iniciado con su `SELECT ...
@@ -180,6 +181,39 @@ impl StatsRepository for PgStatsRepository {
                 let periodo: String = row.try_get("periodo").map_err(|e| RepositoryError(e.to_string()))?;
                 let cantidad: i64 = row.try_get("cantidad").map_err(|e| RepositoryError(e.to_string()))?;
                 Ok(EvolutionPoint { periodo, cantidad })
+            })
+            .collect()
+    }
+
+    async fn map_stats(
+        &self,
+        filters: &GlobalFilters,
+        granularidad: Granularidad,
+    ) -> Result<HashMap<String, i64>, RepositoryError> {
+        // dpto_codigo para Departamento, NUNCA codigo_dane (Hito 4.2) — o
+        // cada municipio contaría como su propia región.
+        let group_col = match granularidad {
+            Granularidad::Departamento => "dpto_codigo",
+            Granularidad::Municipio => "codigo_dane",
+        };
+
+        let mut qb = QueryBuilder::<Postgres>::new(format!(
+            "SELECT {group_col} AS codigo, COALESCE(SUM(cantidad), 0) AS total FROM estadistica_delictiva"
+        ));
+        apply_filters(&mut qb, filters);
+        qb.push(format!(" GROUP BY {group_col}"));
+
+        let rows = qb
+            .build()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| RepositoryError(e.to_string()))?;
+
+        rows.into_iter()
+            .map(|row| {
+                let codigo: i32 = row.try_get("codigo").map_err(|e| RepositoryError(e.to_string()))?;
+                let total: i64 = row.try_get("total").map_err(|e| RepositoryError(e.to_string()))?;
+                Ok((codigo.to_string(), total))
             })
             .collect()
     }
@@ -416,5 +450,48 @@ mod integration_tests {
             serie_mensual.iter().map(|p| p.cantidad).sum::<i64>(),
             serie_anual[0].cantidad
         );
+    }
+
+    #[tokio::test]
+    async fn map_stats_bogota_departamento_equals_bogota_municipio() {
+        // Bogotá, D.C. es su propio departamento (dpto_codigo=11) Y su único
+        // municipio (codigo_dane=11001) — una invariante exacta para
+        // confirmar que ambas granularidades agrupan por la columna
+        // correcta.
+        let repo = real_repo().await;
+        let filters = GlobalFilters {
+            anio_inicio: Some(2023),
+            anio_fin: Some(2023),
+            ..Default::default()
+        };
+
+        let por_depto = repo
+            .map_stats(&filters, Granularidad::Departamento)
+            .await
+            .unwrap();
+        let por_municipio = repo
+            .map_stats(&filters, Granularidad::Municipio)
+            .await
+            .unwrap();
+
+        assert_eq!(por_depto.get("11"), por_municipio.get("11001"));
+        assert!(por_depto.get("11").unwrap() > &0);
+    }
+
+    #[tokio::test]
+    async fn map_stats_never_includes_regions_without_data() {
+        let repo = real_repo().await;
+        let filters = GlobalFilters {
+            anio_inicio: Some(1999),
+            anio_fin: Some(1999),
+            ..Default::default()
+        };
+
+        let stats = repo
+            .map_stats(&filters, Granularidad::Municipio)
+            .await
+            .unwrap();
+
+        assert!(stats.is_empty());
     }
 }

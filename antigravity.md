@@ -61,13 +61,13 @@ Toda la lógica profunda del proyecto ha sido extraída a la carpeta `docs/`. **
 
 ## 🚀 4. Estado Actual y Hoja de Ruta (Tracker)
 
-**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` tras una auditoría — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens, Archive) están terminados y reconciliados entre sí. El repositorio está inicializado y pusheado. Backend en desarrollo con TDD estricto (ver Metodología en `docs/plans/02-...`): Fundaciones, Modelado de Datos y Motor Analítico (`/stats/kpi`, `/stats/evolution`) completos y verificados contra PostgreSQL real — sigue el Motor Geoespacial.
+**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` tras una auditoría — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens, Archive) están terminados y reconciliados entre sí. El repositorio está inicializado y pusheado. **Backend funcionalmente completo** (TDD estricto, 63 tests en verde, ver Metodología en `docs/plans/02-...`): los 6 endpoints del contrato de API (`metadata/filtros`, `stats/kpi`, `stats/evolution`, `map/geometry/{granularidad}`, `map/stats`, `health`) funcionan de punta a punta contra PostgreSQL/PostGIS real. Quedan solo refinamientos de Fase 5 (CORS, errores estandarizados, profiling) antes de arrancar el Frontend.
 
 - [x] **Fase 1: ETL y Estandarización de Datos** (Finalizada)
 - [x] **Fase 2: Base de Datos, PostGIS y Arquitectura Documental** (Finalizada, incluye migración correctiva post-auditoría)
 - [x] **Fase 2.5: Sistema de Diseño y Mockups** (Finalizada — tokens Light/Dark reconciliados, 5 pantallas de Flow Screens en Figma)
 - [x] **Fase 2.6: Repositorio Git** (Finalizada — monorepo inicializado, Clean Architecture documentada, `.gitignore`/`README`/`LICENSE`)
-- [ ] **Fase 3: Desarrollo del Backend en Rust** 📍 *(<- ESTAMOS AQUÍ)* — detalle de Hitos en [`docs/plans/02-plan-desarrollo-backend.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/02-plan-desarrollo-backend.md), progreso granular en [`BACKLOG.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md).
+- [x] **Fase 3: Desarrollo del Backend en Rust** (Funcionalmente completa — Fundaciones, Modelado, Motor Analítico y Motor Geoespacial) 📍 *(<- ESTAMOS AQUÍ, cerrando Fase 5 de refinamiento)* — detalle de Hitos en [`docs/plans/02-plan-desarrollo-backend.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/02-plan-desarrollo-backend.md), progreso granular en [`BACKLOG.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md).
 - [ ] **Fase 4: Desarrollo del Frontend en React** (Pendiente) — [`docs/plans/03-plan-desarrollo-frontend.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/03-plan-desarrollo-frontend.md)
 - [ ] **Fase 5: Despliegue e Integración Final** (Pendiente)
 

@@ -1,14 +1,21 @@
-use axum::extract::State;
-use axum::http::StatusCode;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
+use axum::extract::{Path, State};
+use axum::http::{header, StatusCode};
+use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
 use super::routes::AppState;
-use crate::application::{get_evolution, get_filtros, get_kpis};
+use crate::application::get_map_stats as get_map_stats_uc;
+use crate::application::{get_evolution, get_filtros, get_geometry, get_kpis};
 use crate::domain::evolution::{Agrupacion, Evolution};
 use crate::domain::filters::GlobalFilters;
+use crate::domain::granularidad::Granularidad;
 use crate::domain::kpis::Kpis;
+use crate::domain::map_stats::MapStats;
 use crate::domain::vocabulario::FiltrosVocabulario;
 
 /// Liveness check simple: si el proceso responde, está vivo.
@@ -61,6 +68,59 @@ pub async fn get_evolution_stats(
     Json(body): Json<EvolutionRequestBody>,
 ) -> Result<Json<Evolution>, (StatusCode, String)> {
     get_evolution::execute(&state.stats_repo, &body.filters, body.agrupacion)
+        .await
+        .map(Json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+}
+
+/// `GET /api/v1/map/geometry/{granularidad}` — ver `02-api-contracts.md`
+/// §3.1 (ADR 0002, Hito 4.1). No usa `Json<T>` de retorno porque además del
+/// body necesita las cabeceras `Cache-Control`/`ETag` para cacheo agresivo
+/// (RNF-08) — el `ETag` es un hash del contenido, no un valor fijo, así que
+/// cambia automáticamente si la geometría subyacente cambia.
+pub async fn get_map_geometry(
+    State(state): State<AppState>,
+    Path(granularidad): Path<Granularidad>,
+) -> Result<Response, (StatusCode, String)> {
+    let geojson = get_geometry::execute(&state.geometry_repo, granularidad)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let body = serde_json::to_string(&geojson)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut hasher = DefaultHasher::new();
+    body.hash(&mut hasher);
+    let etag = format!("\"{:x}\"", hasher.finish());
+
+    Ok((
+        [
+            (header::CACHE_CONTROL, "public, max-age=86400".to_string()),
+            (header::ETAG, etag),
+            (header::CONTENT_TYPE, "application/json".to_string()),
+        ],
+        body,
+    )
+        .into_response())
+}
+
+/// Body de `POST /api/v1/map/stats` (`02-api-contracts.md` §3.2) — mismo
+/// razonamiento que `EvolutionRequestBody`: forma de empaquetado del wire
+/// format de este endpoint, no un concepto de dominio.
+#[derive(Debug, Deserialize)]
+pub struct MapStatsRequestBody {
+    #[serde(default)]
+    filters: GlobalFilters,
+    granularidad: Granularidad,
+}
+
+/// `POST /api/v1/map/stats` — ver `02-api-contracts.md` §3.2
+/// (HU-1.02/1.03/1.04).
+pub async fn get_map_stats(
+    State(state): State<AppState>,
+    Json(body): Json<MapStatsRequestBody>,
+) -> Result<Json<MapStats>, (StatusCode, String)> {
+    get_map_stats_uc::execute(&state.stats_repo, &body.filters, body.granularidad)
         .await
         .map(Json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))

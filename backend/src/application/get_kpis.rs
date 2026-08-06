@@ -188,6 +188,13 @@ mod tests {
         ) -> Result<Vec<crate::domain::evolution::EvolutionPoint>, RepositoryError> {
             unimplemented!("no usado por los tests de get_kpis")
         }
+        async fn map_stats(
+            &self,
+            _filters: &GlobalFilters,
+            _granularidad: crate::domain::granularidad::Granularidad,
+        ) -> Result<HashMap<String, i64>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_kpis")
+        }
     }
 
     #[tokio::test]
