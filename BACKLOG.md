@@ -13,10 +13,16 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 2 (`docs/plans/02-plan-desarrollo-backend.md`): Struct `GlobalFilters` (ya incluye `grupo_edad`/`arma_medio`), endpoint `/api/v1/metadata/filtros` consolidado.
-- [ ] Backend — Fase 3: `/api/v1/stats/kpi` (incluye `mes_mayor_impacto`) y `/api/v1/stats/evolution`.
+- [ ] Backend — Fase 3 (`docs/plans/02-plan-desarrollo-backend.md`): `/api/v1/stats/kpi` (incluye `mes_mayor_impacto`) y `/api/v1/stats/evolution`.
+- [ ] Backend — Fase 4: endpoints geoespaciales (`/api/v1/map/geometry/{granularidad}`, `/api/v1/map/stats`).
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 2: Modelado de Datos y Endpoints Base (Hito 2.1 y 2.2) — TDD**
+- `domain::filters::GlobalFilters` (Hito 2.1): struct `Deserialize` con los 8 campos del contrato (incluye `grupo_edad`/`arma_medio` agregados en la revisión previa), todos opcionales. 3 tests de deserialización (completo/vacío/parcial) escritos antes de la implementación.
+- `domain::vocabulario::FiltrosVocabulario` + `application::get_filtros::execute` (Hito 2.2): caso de uso *passthrough* sobre un trait `FiltrosRepository` (puerto), testeado con un repositorio falso — sin tocar la base de datos — para probar tanto el camino feliz como la propagación de errores.
+- `infrastructure::postgres_filtros_repository::PgFiltrosRepository`: implementación real con 4 `SELECT DISTINCT`. Cubierta por un test de integración explícito contra Postgres real (no mockeado a propósito) que además confirma que la homologación de la migración correctiva (RN-03) sigue vigente (`NO_REPORTADO`, 3 géneros exactos, `DE 18 ANOS Y MAS`).
+- `GET /api/v1/metadata/filtros` cableado end-to-end (router con estado vía `AppState`, pool "lazy" añadido en `db.rs` para que el test de `/api/health` siga sin depender de la base de datos). 13/13 tests en verde; verificado también a mano con el servidor real corriendo (`curl` a ambos endpoints con datos reales).
 
 **2026-08-06 — Backend Fase 1: Fundaciones (Hito 1.1 y 1.2) — TDD desde el día uno**
 - `cargo init` dentro de `backend/` (crate `estadistica-delictiva-api`, edition 2024). Dependencias: `axum`, `tokio` (rt-multi-thread, macros), `sqlx` 0.8 (runtime-tokio-rustls, postgres, chrono, macros — nota: 0.9.0 recién publicado renombró las features de runtime/TLS, se fijó 0.8 por estabilidad), `serde`/`serde_json`, `dotenvy`. Dev-deps para testear Axum sin socket real: `tower` (util), `http-body-util`.

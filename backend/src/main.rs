@@ -3,7 +3,8 @@ mod domain;
 mod infrastructure;
 mod interfaces;
 
-use infrastructure::{config::AppConfig, db};
+use infrastructure::{config::AppConfig, db, postgres_filtros_repository::PgFiltrosRepository};
+use interfaces::http::routes::AppState;
 
 #[tokio::main]
 async fn main() {
@@ -13,12 +14,11 @@ async fn main() {
         .await
         .expect("No se pudo conectar a PostgreSQL — revisa las credenciales en .env");
 
-    // El pool aún no se inyecta en ningún handler (llega con los primeros
-    // endpoints reales en la Fase 2) — se valida aquí que la conexión
-    // funciona antes de levantar el servidor.
-    drop(pool);
+    let state = AppState {
+        filtros_repo: PgFiltrosRepository::new(pool),
+    };
 
-    let app = interfaces::http::build_router();
+    let app = interfaces::http::build_router(state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.server_port))
         .await

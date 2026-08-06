@@ -1,2 +1,5 @@
-//! Entidades y reglas de negocio puras. Sin dependencias de axum ni sqlx.
-//! Se puebla a partir de la Fase 2 (GlobalFilters, Delito, Region...).
+//! Entidades y reglas de negocio puras. Sin dependencias de axum ni sqlx
+//! (sí de `serde`, una excepción pragmática documentada en cada struct).
+
+pub mod filters;
+pub mod vocabulario;
