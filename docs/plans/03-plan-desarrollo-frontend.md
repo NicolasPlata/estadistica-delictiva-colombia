@@ -2,6 +2,9 @@
 
 Este documento detalla la hoja de ruta estratégica para el desarrollo del Cliente/Dashboard de Estadística Delictiva, garantizando el cumplimiento de requerimientos técnicos (Performance) y de interfaz (Premium/Glassmorphism).
 
+## Metodología: TDD
+Igual que en el backend (ver `docs/plans/02-plan-desarrollo-backend.md`), la lógica no-visual se escribe test-first: funciones de `shared/api/` (mapeo de respuestas de `02-api-contracts.md`), lógica de `shared/store/` (ej. el reseteo de mapa base al cambiar tema, HU-1.05) y utilidades de formateo (separadores de miles, etc.) llevan tests unitarios (Vitest) escritos antes de la implementación. Los componentes visuales puros se verifican manualmente en el navegador — TDD aplica a lógica, no a maquetado.
+
 ---
 
 ## Fase 1: Setup e Infraestructura Base

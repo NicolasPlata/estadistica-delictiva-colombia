@@ -13,11 +13,17 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 1 (`docs/plans/02-plan-desarrollo-backend.md`): `cargo new`, dependencias, esqueleto de Clean Architecture (`domain/application/infrastructure/interfaces`), `PgPool`, health check.
-- [ ] Backend — Fase 2: Struct `GlobalFilters` (ya incluye `grupo_edad`/`arma_medio`), endpoint `/api/v1/metadata/filtros` consolidado.
+- [ ] Backend — Fase 2 (`docs/plans/02-plan-desarrollo-backend.md`): Struct `GlobalFilters` (ya incluye `grupo_edad`/`arma_medio`), endpoint `/api/v1/metadata/filtros` consolidado.
 - [ ] Backend — Fase 3: `/api/v1/stats/kpi` (incluye `mes_mayor_impacto`) y `/api/v1/stats/evolution`.
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 1: Fundaciones (Hito 1.1 y 1.2) — TDD desde el día uno**
+- `cargo init` dentro de `backend/` (crate `estadistica-delictiva-api`, edition 2024). Dependencias: `axum`, `tokio` (rt-multi-thread, macros), `sqlx` 0.8 (runtime-tokio-rustls, postgres, chrono, macros — nota: 0.9.0 recién publicado renombró las features de runtime/TLS, se fijó 0.8 por estabilidad), `serde`/`serde_json`, `dotenvy`. Dev-deps para testear Axum sin socket real: `tower` (util), `http-body-util`.
+- Esqueleto de Clean Architecture creado (`domain/`, `application/` vacíos por ahora — se llenan en Fase 2/3; `infrastructure/{config,db}.rs`; `interfaces/http/{routes,handlers}.rs`).
+- **Adopción de metodología TDD** (pedido explícito del usuario), documentada en `docs/plans/02-...` y `03-...`. Aplicada de inmediato: `AppConfig::build` y el router de `/api/health` se escribieron test-first (rojo confirmado por compilación fallida → implementación mínima → verde, 5 tests). `AppConfig` inyecta el "lookup" de variables en vez de llamar a `std::env::var` directo, precisamente para poder testear el parseo sin tocar el entorno real.
+- `.env` normalizado a formato estándar `KEY=value` (antes tenía comillas y espacios alrededor del `=`, que los scripts de Python compensaban a mano con `.strip()`) — ahora cualquier librería dotenv-compatible lo lee sin trucos. `.env.example` agregado en la raíz.
+- Verificación end-to-end real (no solo tests): `cargo run` levantó el servidor, conectó a PostgreSQL de verdad, y `GET /api/health` respondió `{"status":"ok"}` con HTTP 200.
 
 **2026-08-06 — Repositorio y arquitectura de código**
 - Repo inicializado y pusheado: `git@github.com:NicolasPlata/estadistica-delictiva-colombia.git` (`main`), monorepo, `.gitignore`/`LICENSE`/`README.md` profesionales.

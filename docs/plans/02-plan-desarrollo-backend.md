@@ -2,6 +2,12 @@
 
 Este documento detalla la hoja de ruta estratégica para el desarrollo del Backend de la plataforma de Estadística Delictiva, construido en Rust. Se estructura en Fases (agrupaciones lógicas) e Hitos (entregables funcionales).
 
+## Metodología: TDD (Test-Driven Development)
+Todo el código de negocio de este backend se escribe con el ciclo **red-green-refactor**: primero el test que falla, luego el mínimo código para pasarlo, luego refactor si aplica. Esto incluye:
+*   La capa `domain/` y `application/` (casos de uso), que por diseño de Clean Architecture no dependen de Axum ni SQLx, se testean como Rust puro con `#[test]` estándar.
+*   Los handlers/rutas de `interfaces/http/` se testean con `tower::ServiceExt::oneshot` contra el `Router` de Axum, sin levantar un socket real (dev-dependencies: `tower` con feature `util`, `http-body-util`).
+*   La capa `infrastructure/` (implementaciones SQLx reales) se cubre con tests de integración contra la base de datos de desarrollo cuando el caso lo amerita — no todo necesita mockearse, pero la lógica de negocio nunca debe requerir una base de datos real para testearse (por eso los traits de `application::ports`).
+
 ---
 
 ## Fase 1: Fundaciones y Configuración Inicial
