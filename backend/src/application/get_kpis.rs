@@ -167,6 +167,27 @@ mod tests {
         ) -> Result<HashMap<String, i64>, RepositoryError> {
             Ok(HashMap::from([("MASCULINO".to_string(), 100)]))
         }
+
+        // No relevantes para los tests de KPI (llegaron con el Hito 3.2).
+        async fn municipio_nombre(
+            &self,
+            _codigo_dane: i32,
+        ) -> Result<Option<String>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_kpis")
+        }
+        async fn departamento_nombre(
+            &self,
+            _dpto_codigo: i32,
+        ) -> Result<Option<String>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_kpis")
+        }
+        async fn evolution_series(
+            &self,
+            _filters: &GlobalFilters,
+            _agrupacion: crate::domain::evolution::Agrupacion,
+        ) -> Result<Vec<crate::domain::evolution::EvolutionPoint>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_kpis")
+        }
     }
 
     #[tokio::test]

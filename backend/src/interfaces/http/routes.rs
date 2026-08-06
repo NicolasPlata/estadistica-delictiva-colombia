@@ -21,6 +21,10 @@ pub fn build_router(state: AppState) -> Router {
             get(handlers::get_filtros_metadata),
         )
         .route("/api/v1/stats/kpi", post(handlers::get_kpi_stats))
+        .route(
+            "/api/v1/stats/evolution",
+            post(handlers::get_evolution_stats),
+        )
         .with_state(state)
 }
 
@@ -158,5 +162,69 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), axum::http::StatusCode::OK);
+    }
+
+    /// Test de integración: `POST /api/v1/stats/evolution` con agrupación
+    /// ANUAL sobre Bogotá, confirmando la forma exacta del contrato
+    /// (`02-api-contracts.md` §2.2) — `region_label` resuelto por nombre,
+    /// no por código, y una serie con `periodo`/`cantidad`.
+    #[tokio::test]
+    async fn evolution_endpoint_returns_contract_shaped_json_for_a_municipio() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/stats/evolution")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({
+                            "filters": { "municipio_id": 11001, "anio_inicio": 2020, "anio_fin": 2022 },
+                            "agrupacion": "ANUAL"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["region_label"], "BOGOTÁ, D.C.");
+        let series = json["series"].as_array().unwrap();
+        assert_eq!(series.len(), 3);
+        assert!(series[0]["periodo"].is_string());
+        assert!(series[0]["cantidad"].is_number());
+    }
+
+    #[tokio::test]
+    async fn evolution_endpoint_defaults_to_nacional_without_geographic_filter() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/stats/evolution")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({ "filters": {}, "agrupacion": "MENSUAL" }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert_eq!(json["region_label"], "Nacional");
     }
 }

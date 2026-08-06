@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use sqlx::{PgPool, Postgres, QueryBuilder, Row};
 
 use crate::application::ports::{RepositoryError, StatsRepository};
+use crate::domain::evolution::{Agrupacion, EvolutionPoint};
 use crate::domain::filters::GlobalFilters;
 
 /// Encadena las cláusulas `WHERE` correspondientes a los campos presentes
@@ -119,6 +120,66 @@ impl StatsRepository for PgStatsRepository {
                 let genero: String = row.try_get("genero").map_err(|e| RepositoryError(e.to_string()))?;
                 let total: i64 = row.try_get("total").map_err(|e| RepositoryError(e.to_string()))?;
                 Ok((genero, total))
+            })
+            .collect()
+    }
+
+    async fn municipio_nombre(&self, codigo_dane: i32) -> Result<Option<String>, RepositoryError> {
+        // Se consulta municipios_geo (la tabla de referencia geográfica),
+        // no estadistica_delictiva — es la fuente correcta para un nombre,
+        // no la tabla de hechos.
+        sqlx::query_scalar::<_, String>(
+            "SELECT municipio FROM municipios_geo WHERE codigo_dane = $1 LIMIT 1",
+        )
+        .bind(codigo_dane)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| RepositoryError(e.to_string()))
+    }
+
+    async fn departamento_nombre(
+        &self,
+        dpto_codigo: i32,
+    ) -> Result<Option<String>, RepositoryError> {
+        sqlx::query_scalar::<_, String>(
+            "SELECT departamento FROM municipios_geo WHERE dpto_codigo = $1 LIMIT 1",
+        )
+        .bind(dpto_codigo)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| RepositoryError(e.to_string()))
+    }
+
+    async fn evolution_series(
+        &self,
+        filters: &GlobalFilters,
+        agrupacion: Agrupacion,
+    ) -> Result<Vec<EvolutionPoint>, RepositoryError> {
+        let (select_periodo, group_and_order) = match agrupacion {
+            Agrupacion::Anual => ("anio::text", "GROUP BY anio ORDER BY anio"),
+            Agrupacion::Mensual => (
+                "anio::text || '-' || lpad(mes::text, 2, '0')",
+                "GROUP BY anio, mes ORDER BY anio, mes",
+            ),
+        };
+
+        let mut qb = QueryBuilder::<Postgres>::new(format!(
+            "SELECT {select_periodo} AS periodo, COALESCE(SUM(cantidad), 0) AS cantidad FROM estadistica_delictiva"
+        ));
+        apply_filters(&mut qb, filters);
+        qb.push(" ").push(group_and_order);
+
+        let rows = qb
+            .build()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| RepositoryError(e.to_string()))?;
+
+        rows.into_iter()
+            .map(|row| {
+                let periodo: String = row.try_get("periodo").map_err(|e| RepositoryError(e.to_string()))?;
+                let cantidad: i64 = row.try_get("cantidad").map_err(|e| RepositoryError(e.to_string()))?;
+                Ok(EvolutionPoint { periodo, cantidad })
             })
             .collect()
     }
@@ -287,5 +348,73 @@ mod integration_tests {
 
         assert_eq!(distribucion.values().sum::<i64>(), total);
         assert!(distribucion.contains_key("NO_REPORTADO"));
+    }
+
+    #[tokio::test]
+    async fn municipio_nombre_resolves_bogota() {
+        let repo = real_repo().await;
+
+        let nombre = repo.municipio_nombre(11001).await.unwrap();
+
+        assert_eq!(nombre, Some("BOGOTÁ, D.C.".to_string()));
+    }
+
+    #[tokio::test]
+    async fn municipio_nombre_is_none_for_unknown_code() {
+        let repo = real_repo().await;
+
+        assert_eq!(repo.municipio_nombre(999999).await.unwrap(), None);
+    }
+
+    #[tokio::test]
+    async fn departamento_nombre_resolves_antioquia() {
+        let repo = real_repo().await;
+
+        let nombre = repo.departamento_nombre(5).await.unwrap();
+
+        assert_eq!(nombre, Some("ANTIOQUIA".to_string()));
+    }
+
+    #[tokio::test]
+    async fn evolution_series_anual_has_one_point_per_year_in_range() {
+        let repo = real_repo().await;
+        let filters = GlobalFilters {
+            anio_inicio: Some(2020),
+            anio_fin: Some(2022),
+            ..Default::default()
+        };
+
+        let serie = repo
+            .evolution_series(&filters, Agrupacion::Anual)
+            .await
+            .unwrap();
+
+        let periodos: Vec<&str> = serie.iter().map(|p| p.periodo.as_str()).collect();
+        assert_eq!(periodos, vec!["2020", "2021", "2022"]);
+    }
+
+    #[tokio::test]
+    async fn evolution_series_mensual_has_yyyy_mm_periods_summing_to_the_annual_total() {
+        let repo = real_repo().await;
+        let filters = GlobalFilters {
+            anio_inicio: Some(2023),
+            anio_fin: Some(2023),
+            ..Default::default()
+        };
+
+        let serie_mensual = repo
+            .evolution_series(&filters, Agrupacion::Mensual)
+            .await
+            .unwrap();
+        let serie_anual = repo
+            .evolution_series(&filters, Agrupacion::Anual)
+            .await
+            .unwrap();
+
+        assert!(serie_mensual.iter().all(|p| p.periodo.starts_with("2023-")));
+        assert_eq!(
+            serie_mensual.iter().map(|p| p.cantidad).sum::<i64>(),
+            serie_anual[0].cantidad
+        );
     }
 }

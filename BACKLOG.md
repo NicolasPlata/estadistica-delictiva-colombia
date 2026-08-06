@@ -13,10 +13,18 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 3, Hito 3.2 (`docs/plans/02-plan-desarrollo-backend.md`): `/api/v1/stats/evolution` (agrupación ANUAL/MENSUAL).
-- [ ] Backend — Fase 4: endpoints geoespaciales (`/api/v1/map/geometry/{granularidad}`, `/api/v1/map/stats`).
+- [ ] Backend — Fase 4 (`docs/plans/02-plan-desarrollo-backend.md`): endpoints geoespaciales — `GET /api/v1/map/geometry/{granularidad}` y `POST /api/v1/map/stats`.
+- [ ] Backend — Fase 5: middleware CORS, manejo de errores estandarizado, profiling.
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 3, Hito 3.2: Endpoint de Evolución (`POST /api/v1/stats/evolution`) — TDD, Fase 3 completa**
+- `domain::evolution`: `Agrupacion` (ANUAL/MENSUAL, deserializado desde mayúsculas), `EvolutionPoint`, `Evolution`.
+- `application::get_evolution` añade una segunda pieza de lógica de negocio real (además de la de KPIs): resolución de `region_label` con precedencia explícita **municipio > departamento > "Nacional"**, con placeholder ("Región desconocida") si el código no resuelve a ningún nombre — 5 tests unitarios con repositorio falso cubren las 4 combinaciones más el caso de código inexistente.
+- `StatsRepository` extendido con `municipio_nombre`/`departamento_nombre` (consultan `municipios_geo`, la tabla de referencia geográfica — no la tabla de hechos) y `evolution_series` (reutiliza el mismo `apply_filters` del Hito 3.1; el `SELECT`/`GROUP BY` cambia según `agrupacion` vía un `match`).
+- 6 tests de integración nuevos contra Postgres real, incluyendo uno que verifica que la suma de la serie MENSUAL de un año coincide exactamente con el total de la serie ANUAL del mismo año (invariante de consistencia entre dos agregaciones distintas).
+- Verificado a mano: evolución 2020-2025 de Bogotá y evolución mensual nacional de 2023, ambas con números creíbles.
+- **Fase 3 (Motor Analítico) completa.** 49/49 tests en verde.
 
 **2026-08-06 — Backend Fase 3, Hito 3.1: Endpoint de KPIs (`POST /api/v1/stats/kpi`) — TDD**
 - Primera lógica de negocio real del backend (hasta ahora todo había sido passthrough): `application::get_kpis` calcula `variacion_porcentual` comparando el total del periodo filtrado contra el "periodo anterior" (mismo largo, desplazado hacia atrás). Ambas funciones puras (`calcular_variacion_porcentual`, `periodo_anterior`) tienen 8 tests unitarios cubriendo incremento/decremento/sin cambio/línea base en cero — casos donde no hay una respuesta matemáticamente "correcta" (división por cero) se documentan como convención explícita, no un accidente.

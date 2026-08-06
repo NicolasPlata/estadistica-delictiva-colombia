@@ -61,7 +61,7 @@ Toda la lógica profunda del proyecto ha sido extraída a la carpeta `docs/`. **
 
 ## 🚀 4. Estado Actual y Hoja de Ruta (Tracker)
 
-**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` tras una auditoría — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens, Archive) están terminados y reconciliados entre sí. El repositorio está inicializado y pusheado. Arrancamos la Fase 1 del Backend.
+**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` tras una auditoría — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens, Archive) están terminados y reconciliados entre sí. El repositorio está inicializado y pusheado. Backend en desarrollo con TDD estricto (ver Metodología en `docs/plans/02-...`): Fundaciones, Modelado de Datos y Motor Analítico (`/stats/kpi`, `/stats/evolution`) completos y verificados contra PostgreSQL real — sigue el Motor Geoespacial.
 
 - [x] **Fase 1: ETL y Estandarización de Datos** (Finalizada)
 - [x] **Fase 2: Base de Datos, PostGIS y Arquitectura Documental** (Finalizada, incluye migración correctiva post-auditoría)

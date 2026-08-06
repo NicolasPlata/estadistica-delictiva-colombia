@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
+use crate::domain::evolution::{Agrupacion, EvolutionPoint};
 use crate::domain::filters::GlobalFilters;
 use crate::domain::vocabulario::FiltrosVocabulario;
 
@@ -41,4 +42,19 @@ pub trait StatsRepository {
         &self,
         filters: &GlobalFilters,
     ) -> Result<HashMap<String, i64>, RepositoryError>;
+
+    /// Nombre del municipio para un `codigo_dane`, o `None` si no existe
+    /// (HU-3.03: título dinámico del gráfico de evolución regional).
+    async fn municipio_nombre(&self, codigo_dane: i32) -> Result<Option<String>, RepositoryError>;
+    /// Nombre del departamento para un `dpto_codigo`, o `None` si no existe.
+    async fn departamento_nombre(
+        &self,
+        dpto_codigo: i32,
+    ) -> Result<Option<String>, RepositoryError>;
+    /// Serie temporal agregada según `agrupacion` (HU-3.02/HU-3.03).
+    async fn evolution_series(
+        &self,
+        filters: &GlobalFilters,
+        agrupacion: Agrupacion,
+    ) -> Result<Vec<EvolutionPoint>, RepositoryError>;
 }
