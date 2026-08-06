@@ -13,10 +13,18 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 5 (`docs/plans/02-plan-desarrollo-backend.md`): middleware CORS, manejo de errores estandarizado, profiling con `EXPLAIN ANALYZE`.
+- [ ] Backend — Fase 5, Hito 5.2 (`docs/plans/02-plan-desarrollo-backend.md`): profiling con `EXPLAIN ANALYZE` y prueba de carga local contra RNF-03 (<300ms).
 - [ ] Backend completo → arrancar Frontend (`docs/plans/03-plan-desarrollo-frontend.md`).
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 5, Hito 5.1: Middleware y Seguridad (TDD)**
+- **Bug real encontrado y corregido:** los 5 handlers existentes devolvían `(StatusCode, String)` en caso de error, que Axum renderiza como **texto plano** — violaba lo que `02-api-contracts.md` promete desde su primera línea ("cuerpo JSON descriptivo"). Ningún test lo había detectado porque los tests de integración anteriores solo ejercitaban el camino feliz.
+- `interfaces/http/error::AppError` (`BadRequest`/`Internal`) unifica el shape de error a `{"error": "..."}` en los 6 endpoints, con `From<RepositoryError>` para que los handlers usen `?` en vez de `.map_err(...)` repetido.
+- `interfaces/http/extractors::{AppJson, AppPath}`: envuelven los extractores nativos de Axum para que un body JSON malformado o un parámetro de ruta inválido (ej. `/map/geometry/INVALIDO`) también respondan 400 con el mismo shape — antes cada uno fallaba con el texto plano por defecto de Axum, distinto entre sí.
+- CORS restringido a un único origen configurable (`CORS_ALLOWED_ORIGIN`, default `http://localhost:5173`) vía `tower-http`. Deliberadamente **no** se usó `Any`: con un solo origen dinámico (`AllowOrigin::list`, no un valor "exact") el header solo se refleja cuando el `Origin` de la petición calza — verificado con un test que confirma que un origen no autorizado no recibe la cabecera.
+- Verificado a mano con el servidor real: origen permitido/no autorizado, JSON malformado, y granularidad de ruta inválida — los 3 casos de error devuelven JSON limpio con el status correcto.
+- 75/75 tests en verde (15 nuevos).
 
 **2026-08-06 — Backend Fase 4: Motor Geoespacial (`GET /api/v1/map/geometry/{granularidad}`, `POST /api/v1/map/stats`) — TDD, Backend funcionalmente completo**
 - `domain::granularidad::Granularidad` (DEPARTAMENTO/MUNICIPIO) y `domain::map_stats::MapStats`.

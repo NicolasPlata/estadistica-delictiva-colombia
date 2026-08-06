@@ -5,6 +5,10 @@
 pub struct AppConfig {
     pub database_url: String,
     pub server_port: u16,
+    /// Origen permitido por CORS (Hito 5.1) — default al puerto estándar de
+    /// `vite dev` para que el frontend funcione sin configuración adicional
+    /// en desarrollo local; configurable vía env para producción.
+    pub cors_allowed_origin: String,
 }
 
 impl AppConfig {
@@ -29,9 +33,13 @@ impl AppConfig {
             .and_then(|p| p.parse().ok())
             .unwrap_or(3000);
 
+        let cors_allowed_origin =
+            get("CORS_ALLOWED_ORIGIN").unwrap_or_else(|_| "http://localhost:5173".to_string());
+
         Self {
             database_url,
             server_port,
+            cors_allowed_origin,
         }
     }
 }
@@ -96,6 +104,37 @@ mod tests {
         let config = AppConfig::build(lookup(vars));
 
         assert_eq!(config.server_port, 8080);
+    }
+
+    #[test]
+    fn defaults_cors_allowed_origin_to_local_vite_dev_server() {
+        let vars = HashMap::from([
+            ("DB_USER", "u"),
+            ("DB_PASS", "p"),
+            ("DB_HOST", "h"),
+            ("DB_PORT", "5432"),
+            ("DB_NAME", "d"),
+        ]);
+
+        let config = AppConfig::build(lookup(vars));
+
+        assert_eq!(config.cors_allowed_origin, "http://localhost:5173");
+    }
+
+    #[test]
+    fn reads_cors_allowed_origin_when_set() {
+        let vars = HashMap::from([
+            ("DB_USER", "u"),
+            ("DB_PASS", "p"),
+            ("DB_HOST", "h"),
+            ("DB_PORT", "5432"),
+            ("DB_NAME", "d"),
+            ("CORS_ALLOWED_ORIGIN", "https://mi-dominio.com"),
+        ]);
+
+        let config = AppConfig::build(lookup(vars));
+
+        assert_eq!(config.cors_allowed_origin, "https://mi-dominio.com");
     }
 
     #[test]

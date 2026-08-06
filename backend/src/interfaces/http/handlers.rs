@@ -1,13 +1,15 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-use axum::extract::{Path, State};
-use axum::http::{header, StatusCode};
+use axum::extract::State;
+use axum::http::header;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
+use super::error::AppError;
+use super::extractors::{AppJson, AppPath};
 use super::routes::AppState;
 use crate::application::get_map_stats as get_map_stats_uc;
 use crate::application::{get_evolution, get_filtros, get_geometry, get_kpis};
@@ -28,25 +30,19 @@ pub async fn health() -> Json<Value> {
 /// `GET /api/v1/metadata/filtros` — ver `02-api-contracts.md` §4.1.
 pub async fn get_filtros_metadata(
     State(state): State<AppState>,
-) -> Result<Json<FiltrosVocabulario>, (StatusCode, String)> {
-    get_filtros::execute(&state.filtros_repo)
-        .await
-        .map(Json)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+) -> Result<Json<FiltrosVocabulario>, AppError> {
+    Ok(Json(get_filtros::execute(&state.filtros_repo).await?))
 }
 
 /// `POST /api/v1/stats/kpi` — ver `02-api-contracts.md` §2.1 (HU-3.01).
 /// El body es `GlobalFilters` directamente (no envuelto en `{"filters": ...}`
-/// como sí lo hará `/stats/evolution` en el Hito 3.2, que además necesita
-/// el parámetro `agrupacion` junto a los filtros).
+/// como sí lo hace `/stats/evolution`, que además necesita el parámetro
+/// `agrupacion` junto a los filtros).
 pub async fn get_kpi_stats(
     State(state): State<AppState>,
-    Json(filters): Json<GlobalFilters>,
-) -> Result<Json<Kpis>, (StatusCode, String)> {
-    get_kpis::execute(&state.stats_repo, &filters)
-        .await
-        .map(Json)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+    AppJson(filters): AppJson<GlobalFilters>,
+) -> Result<Json<Kpis>, AppError> {
+    Ok(Json(get_kpis::execute(&state.stats_repo, &filters).await?))
 }
 
 /// Body de `POST /api/v1/stats/evolution` (`02-api-contracts.md` §2.2) —
@@ -65,12 +61,11 @@ pub struct EvolutionRequestBody {
 /// (HU-3.02/HU-3.03).
 pub async fn get_evolution_stats(
     State(state): State<AppState>,
-    Json(body): Json<EvolutionRequestBody>,
-) -> Result<Json<Evolution>, (StatusCode, String)> {
-    get_evolution::execute(&state.stats_repo, &body.filters, body.agrupacion)
-        .await
-        .map(Json)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+    AppJson(body): AppJson<EvolutionRequestBody>,
+) -> Result<Json<Evolution>, AppError> {
+    Ok(Json(
+        get_evolution::execute(&state.stats_repo, &body.filters, body.agrupacion).await?,
+    ))
 }
 
 /// `GET /api/v1/map/geometry/{granularidad}` — ver `02-api-contracts.md`
@@ -80,14 +75,12 @@ pub async fn get_evolution_stats(
 /// cambia automáticamente si la geometría subyacente cambia.
 pub async fn get_map_geometry(
     State(state): State<AppState>,
-    Path(granularidad): Path<Granularidad>,
-) -> Result<Response, (StatusCode, String)> {
-    let geojson = get_geometry::execute(&state.geometry_repo, granularidad)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    AppPath(granularidad): AppPath<Granularidad>,
+) -> Result<Response, AppError> {
+    let geojson = get_geometry::execute(&state.geometry_repo, granularidad).await?;
 
     let body = serde_json::to_string(&geojson)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(|e| AppError::Internal(format!("no se pudo serializar el GeoJSON: {e}")))?;
 
     let mut hasher = DefaultHasher::new();
     body.hash(&mut hasher);
@@ -118,10 +111,9 @@ pub struct MapStatsRequestBody {
 /// (HU-1.02/1.03/1.04).
 pub async fn get_map_stats(
     State(state): State<AppState>,
-    Json(body): Json<MapStatsRequestBody>,
-) -> Result<Json<MapStats>, (StatusCode, String)> {
-    get_map_stats_uc::execute(&state.stats_repo, &body.filters, body.granularidad)
-        .await
-        .map(Json)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+    AppJson(body): AppJson<MapStatsRequestBody>,
+) -> Result<Json<MapStats>, AppError> {
+    Ok(Json(
+        get_map_stats_uc::execute(&state.stats_repo, &body.filters, body.granularidad).await?,
+    ))
 }

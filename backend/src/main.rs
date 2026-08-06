@@ -24,7 +24,8 @@ async fn main() {
         geometry_repo: PgGeometryRepository::new(pool),
     };
 
-    let app = interfaces::http::build_router(state);
+    let app = interfaces::http::build_router(state)
+        .layer(interfaces::http::cors::cors_layer(&config.cors_allowed_origin));
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.server_port))
         .await
