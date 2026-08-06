@@ -13,10 +13,19 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 5, Hito 5.2 (`docs/plans/02-plan-desarrollo-backend.md`): profiling con `EXPLAIN ANALYZE` y prueba de carga local contra RNF-03 (<300ms).
-- [ ] Backend completo → arrancar Frontend (`docs/plans/03-plan-desarrollo-frontend.md`).
+- [ ] **Backend completo → arrancar Frontend** (`docs/plans/03-plan-desarrollo-frontend.md`, Fase 1: Vite + estructura por features).
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 5, Hito 5.2: Profiling y Optimización (RNF-03) — Backend completo**
+- Medido con el servidor real (release build), no solo `EXPLAIN ANALYZE` aislado: `/api/v1/stats/kpi` sin filtros tardaba **1.2s** (4x el presupuesto de RNF-03), `/metadata/filtros` **0.94s**, `/map/geometry/MUNICIPIO` **6.3s** (peor aún para `DEPARTAMENTO`: 9.1s).
+- **Causa raíz confirmada con `EXPLAIN ANALYZE`:** una sola query de KPI sin filtro tardaba 394ms en un full scan de las 4.8M filas — un índice B-Tree no ayuda a una agregación `WHERE 1=1` porque hay que tocar cada fila de todos modos. Exactamente el escenario que `docs/plans/02-...` ya anticipaba en el Hito 3.1.
+- **Fix 1 — vista materializada `estadistica_rollup`** (`scripts/migrations/0002_vista_materializada_rollup.sql`): agregada por las 7 dimensiones filtrables, reduce 4,836,275 → 899,265 filas (~5.4x). Verificación defensiva en la propia migración: el `SUM(cantidad)` del rollup debe igualar exactamente al de la tabla original (lo hace). `PgStatsRepository` y `PgFiltrosRepository` migrados a consultarla. Bug encontrado en el camino: `SUM(bigint)` en Postgres devuelve `NUMERIC`, no `bigint` — como el rollup ya pre-sumaba `cantidad` a bigint, sumarlo de nuevo rompía la decodificación de `sqlx`; se corrigió con un cast explícito `::bigint`.
+- **Fix 2 — caché en memoria** (`tokio::sync::OnceCell`, no estaba en el plan original) para `metadata/filtros` y `map/geometry/{granularidad}`, datos esencialmente estáticos entre corridas del ETL. Verificado con tests que miden tiempo (cache hit <50-100ms vs. cientos de ms/segundos en frío).
+- **Fix 3 — precalentamiento al arrancar:** `main.rs` llama `get_geometry` para ambas granularidades antes de aceptar conexiones, para que el costo de 5-9s (ST_Union + ST_SimplifyPreserveTopology) lo pague el despliegue, nunca un usuario real. Verificado: primera petición real tras el arranque, 48ms.
+- **Números finales:** `/stats/kpi` 1.2s→0.2s (sin filtro) / 0.95s→0.08s (con filtro); `/stats/evolution` 0.31s→0.05s; `/map/stats` ~0.30s→0.05s; `/metadata/filtros` 0.94s→0.0004s; `/map/geometry` 6-9s→0.03-0.05s. Todos dentro de RNF-03.
+- 78/78 tests en verde (10 nuevos: cache-hit timing ×2, integración de la vista materializada vía los tests ya existentes que ahora corren contra ella).
+- **Backend 100% completo** (Fases 1-5): los 6 endpoints funcionan de punta a punta, con TDD, Clean Architecture, seguridad (CORS, errores estandarizados, SQL parametrizado) y performance verificada contra RNF-03.
 
 **2026-08-06 — Backend Fase 5, Hito 5.1: Middleware y Seguridad (TDD)**
 - **Bug real encontrado y corregido:** los 5 handlers existentes devolvían `(StatusCode, String)` en caso de error, que Axum renderiza como **texto plano** — violaba lo que `02-api-contracts.md` promete desde su primera línea ("cuerpo JSON descriptivo"). Ningún test lo había detectado porque los tests de integración anteriores solo ejercitaban el camino feliz.

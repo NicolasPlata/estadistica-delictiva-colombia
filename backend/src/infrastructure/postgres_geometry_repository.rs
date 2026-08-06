@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use sqlx::PgPool;
+use tokio::sync::OnceCell;
 
 use crate::application::ports::{GeometryRepository, RepositoryError};
 use crate::domain::granularidad::Granularidad;
@@ -16,16 +19,27 @@ const TOLERANCIA_SIMPLIFICACION: f64 = 0.001;
 #[derive(Clone)]
 pub struct PgGeometryRepository {
     pool: PgPool,
+    /// Caché en memoria (Hito 5.2): `municipios_geo` no cambia en runtime,
+    /// pero recomputar `ST_Union`+`ST_SimplifyPreserveTopology` sobre 1,122
+    /// polígonos en cada request cuesta ~6.3s medido contra datos reales
+    /// (aparte del `Cache-Control` HTTP, que solo ahorra este costo al
+    /// *cliente*, no al servidor en cada cache-miss/primer visitante). Una
+    /// celda por granularidad en vez de un `HashMap<Granularidad, _>` —
+    /// solo hay 2 valores posibles, no vale la pena el bound `Hash + Eq`.
+    municipio_cache: Arc<OnceCell<serde_json::Value>>,
+    departamento_cache: Arc<OnceCell<serde_json::Value>>,
 }
 
 impl PgGeometryRepository {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+            municipio_cache: Arc::new(OnceCell::new()),
+            departamento_cache: Arc::new(OnceCell::new()),
+        }
     }
-}
 
-impl GeometryRepository for PgGeometryRepository {
-    async fn get_geometry(
+    async fn fetch_from_db(
         &self,
         granularidad: Granularidad,
     ) -> Result<serde_json::Value, RepositoryError> {
@@ -88,6 +102,23 @@ impl GeometryRepository for PgGeometryRepository {
     }
 }
 
+impl GeometryRepository for PgGeometryRepository {
+    async fn get_geometry(
+        &self,
+        granularidad: Granularidad,
+    ) -> Result<serde_json::Value, RepositoryError> {
+        let cache = match granularidad {
+            Granularidad::Municipio => &self.municipio_cache,
+            Granularidad::Departamento => &self.departamento_cache,
+        };
+
+        cache
+            .get_or_try_init(|| self.fetch_from_db(granularidad))
+            .await
+            .cloned()
+    }
+}
+
 #[cfg(test)]
 mod integration_tests {
     use super::*;
@@ -142,5 +173,41 @@ mod integration_tests {
             .expect("Bogotá debe estar en la geometría municipal");
 
         assert_eq!(bogota["properties"]["nombre_region"], "BOGOTÁ, D.C.");
+    }
+
+    #[tokio::test]
+    async fn second_call_is_served_from_cache_shared_across_clones() {
+        let repo = real_repo().await;
+
+        let first = repo.get_geometry(Granularidad::Municipio).await.unwrap();
+
+        let clone = repo.clone();
+        let start = std::time::Instant::now();
+        let second = clone.get_geometry(Granularidad::Municipio).await.unwrap();
+        let elapsed = start.elapsed();
+
+        assert_eq!(first, second);
+        // La consulta real mide ~6.3s (ST_Union + ST_SimplifyPreserveTopology
+        // sobre 1,122 polígonos); un cache hit debe ser casi instantáneo.
+        assert!(
+            elapsed.as_millis() < 100,
+            "se esperaba un cache hit (<100ms), tardó {elapsed:?} — ¿se está recalculando?"
+        );
+    }
+
+    #[tokio::test]
+    async fn municipio_and_departamento_caches_are_independent() {
+        let repo = real_repo().await;
+
+        let municipio = repo.get_geometry(Granularidad::Municipio).await.unwrap();
+        let departamento = repo
+            .get_geometry(Granularidad::Departamento)
+            .await
+            .unwrap();
+
+        assert_ne!(
+            municipio["features"].as_array().unwrap().len(),
+            departamento["features"].as_array().unwrap().len()
+        );
     }
 }

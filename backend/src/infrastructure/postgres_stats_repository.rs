@@ -9,7 +9,7 @@ use crate::domain::granularidad::Granularidad;
 
 /// Encadena las cláusulas `WHERE` correspondientes a los campos presentes
 /// de `GlobalFilters` sobre un `QueryBuilder` ya iniciado con su `SELECT ...
-/// FROM estadistica_delictiva`. Arranca en `WHERE 1=1` para que cada filtro
+/// FROM estadistica_rollup`. Arranca en `WHERE 1=1` para que cada filtro
 /// solo tenga que preocuparse por su propio `AND ...`, sin bookkeeping de
 /// "es la primera cláusula". Todo valor viaja como bind parameter
 /// (`push_bind`) — nunca se interpola texto de usuario en el SQL, ver los
@@ -60,7 +60,7 @@ impl PgStatsRepository {
 impl StatsRepository for PgStatsRepository {
     async fn total_delitos(&self, filters: &GlobalFilters) -> Result<i64, RepositoryError> {
         let mut qb = QueryBuilder::<Postgres>::new(
-            "SELECT COALESCE(SUM(cantidad), 0) FROM estadistica_delictiva",
+            "SELECT COALESCE(SUM(cantidad), 0)::bigint FROM estadistica_rollup",
         );
         apply_filters(&mut qb, filters);
 
@@ -74,7 +74,7 @@ impl StatsRepository for PgStatsRepository {
         &self,
         filters: &GlobalFilters,
     ) -> Result<Option<String>, RepositoryError> {
-        let mut qb = QueryBuilder::<Postgres>::new("SELECT delitos FROM estadistica_delictiva");
+        let mut qb = QueryBuilder::<Postgres>::new("SELECT delitos FROM estadistica_rollup");
         apply_filters(&mut qb, filters);
         qb.push(" GROUP BY delitos ORDER BY SUM(cantidad) DESC LIMIT 1");
 
@@ -89,7 +89,7 @@ impl StatsRepository for PgStatsRepository {
         filters: &GlobalFilters,
     ) -> Result<Option<String>, RepositoryError> {
         let mut qb = QueryBuilder::<Postgres>::new(
-            "SELECT anio::text || '-' || lpad(mes::text, 2, '0') FROM estadistica_delictiva",
+            "SELECT anio::text || '-' || lpad(mes::text, 2, '0') FROM estadistica_rollup",
         );
         apply_filters(&mut qb, filters);
         qb.push(" GROUP BY anio, mes ORDER BY SUM(cantidad) DESC LIMIT 1");
@@ -105,7 +105,7 @@ impl StatsRepository for PgStatsRepository {
         filters: &GlobalFilters,
     ) -> Result<HashMap<String, i64>, RepositoryError> {
         let mut qb = QueryBuilder::<Postgres>::new(
-            "SELECT genero, COALESCE(SUM(cantidad), 0) AS total FROM estadistica_delictiva",
+            "SELECT genero, COALESCE(SUM(cantidad), 0)::bigint AS total FROM estadistica_rollup",
         );
         apply_filters(&mut qb, filters);
         qb.push(" GROUP BY genero");
@@ -165,7 +165,7 @@ impl StatsRepository for PgStatsRepository {
         };
 
         let mut qb = QueryBuilder::<Postgres>::new(format!(
-            "SELECT {select_periodo} AS periodo, COALESCE(SUM(cantidad), 0) AS cantidad FROM estadistica_delictiva"
+            "SELECT {select_periodo} AS periodo, COALESCE(SUM(cantidad), 0)::bigint AS cantidad FROM estadistica_rollup"
         ));
         apply_filters(&mut qb, filters);
         qb.push(" ").push(group_and_order);
@@ -198,7 +198,7 @@ impl StatsRepository for PgStatsRepository {
         };
 
         let mut qb = QueryBuilder::<Postgres>::new(format!(
-            "SELECT {group_col} AS codigo, COALESCE(SUM(cantidad), 0) AS total FROM estadistica_delictiva"
+            "SELECT {group_col} AS codigo, COALESCE(SUM(cantidad), 0)::bigint AS total FROM estadistica_rollup"
         ));
         apply_filters(&mut qb, filters);
         qb.push(format!(" GROUP BY {group_col}"));

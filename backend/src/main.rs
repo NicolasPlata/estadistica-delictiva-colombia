@@ -24,6 +24,22 @@ async fn main() {
         geometry_repo: PgGeometryRepository::new(pool),
     };
 
+    // Precalienta la caché de geometría (Hito 5.2): sin esto, quien primero
+    // pida /map/geometry tras un despliegue paga ~5-9s (ST_Union +
+    // ST_SimplifyPreserveTopology sobre 1,122 polígonos) en vivo. Mejor
+    // pagar ese costo una vez acá, antes de aceptar conexiones, que
+    // dejárselo a un usuario real.
+    println!("Precalentando caché de geometría...");
+    for granularidad in [
+        domain::granularidad::Granularidad::Municipio,
+        domain::granularidad::Granularidad::Departamento,
+    ] {
+        application::get_geometry::execute(&state.geometry_repo, granularidad)
+            .await
+            .expect("No se pudo precalentar la geometría al arrancar");
+    }
+    println!("Caché de geometría lista.");
+
     let app = interfaces::http::build_router(state)
         .layer(interfaces::http::cors::cors_layer(&config.cors_allowed_origin));
 
