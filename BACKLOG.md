@@ -13,10 +13,18 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — arrancando Fase 1 del backend)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Backend — Fase 3 (`docs/plans/02-plan-desarrollo-backend.md`): `/api/v1/stats/kpi` (incluye `mes_mayor_impacto`) y `/api/v1/stats/evolution`.
+- [ ] Backend — Fase 3, Hito 3.2 (`docs/plans/02-plan-desarrollo-backend.md`): `/api/v1/stats/evolution` (agrupación ANUAL/MENSUAL).
 - [ ] Backend — Fase 4: endpoints geoespaciales (`/api/v1/map/geometry/{granularidad}`, `/api/v1/map/stats`).
 
 ## ✅ Hecho
+
+**2026-08-06 — Backend Fase 3, Hito 3.1: Endpoint de KPIs (`POST /api/v1/stats/kpi`) — TDD**
+- Primera lógica de negocio real del backend (hasta ahora todo había sido passthrough): `application::get_kpis` calcula `variacion_porcentual` comparando el total del periodo filtrado contra el "periodo anterior" (mismo largo, desplazado hacia atrás). Ambas funciones puras (`calcular_variacion_porcentual`, `periodo_anterior`) tienen 8 tests unitarios cubriendo incremento/decremento/sin cambio/línea base en cero — casos donde no hay una respuesta matemáticamente "correcta" (división por cero) se documentan como convención explícita, no un accidente.
+- `application::ports::StatsRepository` expone primitivas (`total_delitos`, `delito_mas_comun`, `mes_mayor_impacto`, `distribucion_genero`) en vez de un único método — así el caso de uso combina 2 llamadas a `total_delitos` (actual + anterior) sin que el repositorio sepa nada de "variación".
+- `infrastructure::postgres_stats_repository::PgStatsRepository`: primer SQL dinámico real del proyecto vía `sqlx::QueryBuilder`. Incluye un test que verifica explícitamente que un intento de inyección SQL en un valor de filtro nunca aparece en el `.sql()` generado (siempre viaja como bind parameter) — la prueba de fuego del requisito de seguridad del plan. También confirma que el nivel departamental filtra por `dpto_codigo`, nunca `codigo_dane` (regla ya documentada en el Hito 4.2).
+- 9 tests de integración contra Postgres real (sin mockear a propósito), incluyendo uno que verifica que `distribucion_genero` suma exactamente lo mismo que `total_delitos` — una invariante de consistencia entre dos queries distintas.
+- Verificado a mano con el servidor real: filtrar por año da una variación creíble (+6.4% 2023 vs. 2022); sin filtro de año, el "periodo anterior" cae fuera del rango del dataset (2014-2019, sin datos) y correctamente dispara la convención de +100%.
+- 35/35 tests en verde.
 
 **2026-08-06 — Backend Fase 2: Modelado de Datos y Endpoints Base (Hito 2.1 y 2.2) — TDD**
 - `domain::filters::GlobalFilters` (Hito 2.1): struct `Deserialize` con los 8 campos del contrato (incluye `grupo_edad`/`arma_medio` agregados en la revisión previa), todos opcionales. 3 tests de deserialización (completo/vacío/parcial) escritos antes de la implementación.

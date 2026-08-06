@@ -3,7 +3,10 @@ mod domain;
 mod infrastructure;
 mod interfaces;
 
-use infrastructure::{config::AppConfig, db, postgres_filtros_repository::PgFiltrosRepository};
+use infrastructure::{
+    config::AppConfig, db, postgres_filtros_repository::PgFiltrosRepository,
+    postgres_stats_repository::PgStatsRepository,
+};
 use interfaces::http::routes::AppState;
 
 #[tokio::main]
@@ -15,7 +18,8 @@ async fn main() {
         .expect("No se pudo conectar a PostgreSQL — revisa las credenciales en .env");
 
     let state = AppState {
-        filtros_repo: PgFiltrosRepository::new(pool),
+        filtros_repo: PgFiltrosRepository::new(pool.clone()),
+        stats_repo: PgStatsRepository::new(pool),
     };
 
     let app = interfaces::http::build_router(state);

@@ -1,5 +1,12 @@
 use serde::Deserialize;
 
+/// Rango histórico válido del dataset (RN-06, `reglas-negocio.md`). Se usa
+/// como default cuando el usuario no acota `anio_inicio`/`anio_fin` pero se
+/// necesita un rango concreto para cálculos derivados (ej. "periodo anterior"
+/// para `variacion_porcentual`, HU-3.01).
+pub const ANIO_MIN: i32 = 2020;
+pub const ANIO_MAX: i32 = 2025;
+
 /// Filtros globales que cruzan toda la app (RF-05, HU-2.01/2.02/2.03).
 /// Todos los campos son opcionales por diseño — un `GlobalFilters` vacío
 /// significa "sin filtrar". Implementa `Deserialize` directamente (una

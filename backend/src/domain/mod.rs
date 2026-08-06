@@ -2,4 +2,5 @@
 //! (sí de `serde`, una excepción pragmática documentada en cada struct).
 
 pub mod filters;
+pub mod kpis;
 pub mod vocabulario;
