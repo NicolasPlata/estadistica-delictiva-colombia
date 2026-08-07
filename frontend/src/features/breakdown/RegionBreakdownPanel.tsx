@@ -149,15 +149,20 @@ export function RegionBreakdownPanel() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <ul className="flex flex-col gap-1 min-w-0">
+          <ul className="flex flex-col gap-1.5 min-w-0">
             {donutData.map((entry, index) => (
-              <li key={entry.name} className="flex items-center gap-1.5 text-label-md text-text-secondary normal-case">
+              <li key={entry.name} className="flex items-start gap-1.5 text-label-md text-text-secondary normal-case">
                 <span
                   aria-hidden="true"
-                  className="w-2 h-2 rounded-full shrink-0"
+                  className="w-2 h-2 rounded-full shrink-0 mt-1"
                   style={{ backgroundColor: CATEGORIA_COLORS[index] }}
                 />
-                <span className="truncate">
+                {/* Nombres largos ("Delitos contra el Patrimonio
+                    Económico") se truncaban con el porcentaje incluido, así
+                    que nunca se veía el %. Se deja hacer wrap a varias
+                    líneas en vez de truncar (min-w-0 para que el flex
+                    child pueda encogerse y realmente ajuste el ancho). */}
+                <span className="min-w-0">
                   {entry.name} · {entry.pct.toFixed(0)}%
                 </span>
               </li>
