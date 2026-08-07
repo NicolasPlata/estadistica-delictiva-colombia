@@ -148,30 +148,33 @@ export function MapCanvas() {
     previousSelectedId.current = selectedRegion?.codigoDane ?? null;
   }, [map, selectedRegion, geometry]);
 
-  // HU-1.04: el orden en que `regiones` y `departamentos-limite` terminan
-  // de tilizar y montar su capa no está garantizado — Municipio es ~30x
-  // más pesado que Departamento, así que el límite departamental puede
-  // terminar añadido al estilo ANTES que `regiones` y quedar debajo suyo
-  // (bug real reportado). Se reafirma al tope del stack de capas cada vez
-  // que cualquiera de las dos geometrías cambia.
+  // HU-1.04: `regiones` se desmonta y remonta cada vez que `geometry` pasa
+  // por `undefined` (mientras Municipio, ~30x más pesado que Departamento,
+  // termina de cargar) — al remontarse, MapLibre la re-agrega al tope del
+  // estilo, por encima de `departamentos-limite` (bug real reportado). Un
+  // efecto disparado una sola vez por ese cambio no alcanza: el remontaje
+  // ocurre en un tick posterior al de este efecto, no en el mismo commit.
+  // `styledata` es el evento que MapLibre emite en cada alta/baja de capa
+  // — reafirmar el tope ahí cubre el caso sin importar cuándo ocurra.
   useEffect(() => {
-    if (!map || !departamentoGeometry) return;
+    if (!map) return;
 
-    let cancelled = false;
-    function bringToFront() {
-      if (cancelled) return;
-      if (map!.getLayer(DEPARTAMENTO_LIMITE_LAYER_ID)) {
+    function ensureLimiteOnTop() {
+      if (!map!.getLayer(DEPARTAMENTO_LIMITE_LAYER_ID)) return;
+      const layers = map!.getStyle()?.layers ?? [];
+      const isTop = layers[layers.length - 1]?.id === DEPARTAMENTO_LIMITE_LAYER_ID;
+      if (!isTop) {
         map!.moveLayer(DEPARTAMENTO_LIMITE_LAYER_ID);
-      } else {
-        requestAnimationFrame(bringToFront);
       }
     }
-    bringToFront();
+
+    map.on("styledata", ensureLimiteOnTop);
+    ensureLimiteOnTop();
 
     return () => {
-      cancelled = true;
+      map.off("styledata", ensureLimiteOnTop);
     };
-  }, [map, geometry, departamentoGeometry]);
+  }, [map]);
 
   function handleClick(event: MapLayerMouseEvent) {
     const feature = event.features?.[0];
