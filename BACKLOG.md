@@ -24,6 +24,14 @@ _(Resuelto 2026-08-07: nombre del endpoint de desglose — se usó `/api/v1/stat
 
 ## ✅ Hecho
 
+**2026-08-07 — READMEs profesionales (raíz, backend, frontend)**
+- Pedido explícito del usuario. Los 3 estaban desactualizados de forma real, no solo cosmética: el de raíz no tenía capturas de pantalla ni sección de funcionalidades (un visitante del portafolio no podía ver cómo se ve la app sin correrla); el de backend decía "6 endpoints"/"78 tests" (ahora 7/107, falta `/stats/breakdown`); el de frontend decía "Dark es el default incondicional" (contradecía el cambio a Light) y no mencionaba `features/breakdown/` ni `MapLegend`/`MetricaToggle`.
+- Capturas nuevas en `docs/screenshots/` (tema claro y oscuro, tomadas contra el stack real corriendo, no mockups) — primera vez que el repo tiene imágenes del producto terminado.
+- README raíz: agregada sección "Funcionalidades" (8 capacidades reales, no aspiracionales), sección "Tests" con los comandos y conteos reales, enlace al plan v2 en el índice de documentación, estado actualizado.
+- README backend: tabla de los 7 endpoints con propósito, árbol de `domain/` actualizado (incluye `delito_categoria.rs`, `metrica.rs`, `breakdown.rs`), nueva sección "Datos: tablas y migraciones" (`estadistica_rollup`, `municipios_geo`, `poblacion_municipal`, las 3 migraciones correctivas).
+- README frontend: árbol actualizado con `features/breakdown/`, corregido el default de tema, conteo de tests real (84).
+- Todos los conteos (endpoints, tests, filas de datos) se verificaron corriendo `cargo test`/`npm test` de nuevo antes de escribir los READMEs, no se copiaron de memoria de sesiones anteriores.
+
 **2026-08-07 — Auditoría de documentación: requerimientos, HU, reglas de negocio y decisiones arquitectónicas**
 - Pedido explícito del usuario: verificar que `requerimientos.md`, `reglas-negocio.md`, `historias-usuario.md` y los ADRs reflejen todo lo implementado en Fases 6-8 y los ajustes posteriores (título, default de tasa, fix de `variacion_porcentual`, Light por defecto, fixes de overflow). Encontrados y corregidos varios huecos reales, no solo revisados:
   - **`historias-usuario.md`:** HU-1.01 seguía afirmando "Dark Mode por defecto" (contradecía el cambio a Light de este mismo día) — corregido. HU-1.02 no mencionaba la dirección de la rampa ni la leyenda (Fase 8) — agregado como criterio de aceptación. **Nunca se habían escrito historias de usuario formales para las Fases 6 y 7** pese a estar completas e implementadas — se agregaron HU-1.06 (Tasa per Cápita) y HU-3.05 (Desglose de Delitos), con criterios de aceptación derivados directamente del comportamiento real ya verificado (no inventados).
