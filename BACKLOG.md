@@ -7,12 +7,26 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 ---
 
 ## 🔴 Decisiones pendientes del usuario
-_(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
+- [ ] **Taxonomía de 8 categorías padre de delitos** para la gráfica de pastel de la Fase 7 (`docs/plans/04-plan-desarrollo-funcionalidades-v2.md`, Hito 7.1) — hay una propuesta borrador en ese documento (agrupación por título del Código Penal contra los 47 delitos reales), pero es contenido de dominio que requiere aprobación explícita antes de codificarse.
+- [ ] Nombre final del endpoint de desglose (`/api/v1/stats/breakdown` propuesto, Hito 7.2) — cosmético, no bloquea el resto del plan.
+- [ ] Orden de implementación entre Fase 6 (tasa per cápita) y Fase 8 (leyenda) — la leyenda debe reflejar la unidad activa (cantidad/tasa) si la Fase 6 ya existe cuando se aborde la Fase 8 (ver riesgo #7 del plan).
 
 ## 🔵 Próximo (en orden)
-- [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica") — único punto abierto conocido; el resto del plan de frontend (`docs/plans/03-plan-desarrollo-frontend.md`) está completo.
+- [ ] **Fases 6-8 de `docs/plans/04-plan-desarrollo-funcionalidades-v2.md`** (pendientes de iniciar, sin fecha comprometida): tasa de criminalidad per cápita usando `Data/Población/Población.xlsx` (Fase 6), tabla + gráfica de pastel de desglose por delito al hacer clic en una región (Fase 7), leyenda del mapa "oscuro = peligroso" (Fase 8) — ver el documento para el orden recomendado entre ellas.
+- [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica") — único punto abierto conocido del alcance ya completado; el resto del plan de frontend (`docs/plans/03-plan-desarrollo-frontend.md`) está completo.
 
 ## ✅ Hecho
+
+**2026-08-07 — Plan de desarrollo para 3 funcionalidades nuevas (Fases 6-8)**
+- Pedido del usuario: 3 cambios — (1) tasa de criminalidad per cápita usando proyecciones de población del DANE, (2) tabla + gráfica de pastel con el desglose de delitos al hacer clic en una región, filtrable por año, y (3) una leyenda en el mapa que indique "oscuro = peligroso". Se pidió explícitamente un plan de Fases/Hitos, incluyendo el diseño en Figma, no implementación todavía.
+- Nuevo documento `docs/plans/04-plan-desarrollo-funcionalidades-v2.md`, enlazado desde `antigravity.md` (ítem 14 del índice).
+- Investigación previa al plan, con hallazgos que cambiaron el diseño propuesto:
+  - `Data/Población/Población.xlsx` (DANE PPED): la hoja útil es `PobMunicipalxÁrea` (84.225 filas, `codigo_dane`/`año`/`área geográfica`/`total`), cobertura 2018-2042 con **1.123 municipios** — un desfase de 1 contra los 1.122 de `municipios_geo`/geometría actual, que hay que reconciliar (mismo tipo de auditoría que la migración 0001).
+  - El endpoint de desglose por delito puede reutilizar exactamente el patrón ya existente de `distribucion_genero` en `postgres_stats_repository.rs` (`GROUP BY` sobre `estadistica_rollup`), agrupando por `delitos` en vez de `genero` — bajo riesgo de performance por precedente ya medido.
+  - RN-04 (`reglas-negocio.md`) ya anticipaba la necesidad de agrupar delitos bajo categorías padre — se armó una propuesta borrador de 8 categorías contra los 47 delitos homologados reales de la base (consultados directamente vía `psql`), marcada como decisión pendiente del usuario, no asumida.
+  - El componente "Map Legend" (Figma, nodo `17:74`) **ya existe pero nunca se implementó en el frontend ni se colocó en ningún Flow Screen** — y su gradiente actual quedó desactualizado por la inversión de la rampa de esta misma sesión (commit `d316557`), así que la Fase 8 no es "diseñar desde cero" sino corregir y conectar algo que ya estaba a medio camino.
+  - Layout actual del mapa (`App.tsx`): KPI arriba, Evolución abajo (ancho completo), Basemap Switcher arriba-derecha — el desglose por delito (Fase 7) no tiene dónde encajar salvo un panel/drawer lateral derecho, y la leyenda (Fase 8) encaja en la franja media del lateral izquierdo, que hasta ahora está vacía.
+- 3 decisiones quedaron explícitamente pendientes del usuario (ver sección de arriba), no resueltas unilateralmente.
 
 **2026-08-07 — Rampa del choropleth invertida: "más oscuro = más peligroso" (Reconciliación 3)**
 - Pedido del usuario: la dirección de la rampa debía leerse de forma absoluta ("entre más oscuro, más peligroso"), no relativa a la superficie de cada tema.

@@ -45,12 +45,13 @@ Toda la lógica profunda del proyecto ha sido extraída a la carpeta `docs/`. **
 ### 🗺️ Roadmaps (Hoja de Ruta)
 12. **[Plan de Desarrollo: Backend](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/02-plan-desarrollo-backend.md)**
 13. **[Plan de Desarrollo: Frontend](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/03-plan-desarrollo-frontend.md)**
+14. **[Plan de Desarrollo: Funcionalidades v2](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/plans/04-plan-desarrollo-funcionalidades-v2.md)** *(pendiente de iniciar)*: tasa de criminalidad per cápita (Fase 6), desglose de delitos por región con tabla + gráfica de pastel (Fase 7), leyenda del mapa (Fase 8).
 
 ### 📌 Seguimiento Operativo
-14. **[Backlog](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md):** qué se hizo, qué sigue, decisiones pendientes y deuda técnica — se actualiza con cada hito. El tracker de la Sección 4 abajo es solo el resumen ejecutivo; el Backlog es la fuente viva.
+15. **[Backlog](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md):** qué se hizo, qué sigue, decisiones pendientes y deuda técnica — se actualiza con cada hito. El tracker de la Sección 4 abajo es solo el resumen ejecutivo; el Backlog es la fuente viva.
 
 ### 🧰 Guía de Desarrollo Local
-15. **[Comandos de Desarrollo](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/desarrollo-local.md):** cómo levantar el proyecto completo desde cero (prerrequisitos, base de datos, backend, frontend) y los comandos del día a día — leer esto antes de intentar correr nada localmente.
+16. **[Comandos de Desarrollo](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/desarrollo-local.md):** cómo levantar el proyecto completo desde cero (prerrequisitos, base de datos, backend, frontend) y los comandos del día a día — leer esto antes de intentar correr nada localmente.
 
 *(Nota: Los scripts usados para la limpieza inicial de los Excel y migración están en la carpeta `scripts/`)*.
 
