@@ -61,7 +61,7 @@ Toda la lógica profunda del proyecto ha sido extraída a la carpeta `docs/`. **
 
 ## 🚀 4. Estado Actual y Hoja de Ruta (Tracker)
 
-**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` y una vista materializada de rollup para performance — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens, Archive) están terminados. El repositorio está inicializado y pusheado. **Backend 100% completo** (TDD estricto, 78 tests en verde): los 6 endpoints del contrato de API funcionan de punta a punta contra PostgreSQL/PostGIS real, dentro de RNF-03 (<300ms) — verificado con mediciones reales, no solo tests. Arrancamos el Frontend.
+**Contexto Inmediato:** ETL, base de datos (incluida una migración correctiva de `codigo_dane` y una vista materializada de rollup para performance — ver `scripts/migrations/`), documentación y sistema de diseño (Figma completo: Cover, Foundations, Components & Helpers, Flow Screens ×6 incluida comparación HU-3.04, Archive) están terminados. El repositorio está inicializado y pusheado. **Backend 100% completo** (TDD estricto, 78 tests en verde): los 6 endpoints del contrato de API funcionan de punta a punta contra PostgreSQL/PostGIS real, dentro de RNF-03 (<300ms). **Frontend arrancado:** Vite+React+TS, estructura por features, tokens de diseño y store (Zustand) listos y testeados (11 tests).
 
 - [x] **Fase 1: ETL y Estandarización de Datos** (Finalizada)
 - [x] **Fase 2: Base de Datos, PostGIS y Arquitectura Documental** (Finalizada, incluye migración correctiva post-auditoría)

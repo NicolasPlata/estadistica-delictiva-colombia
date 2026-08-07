@@ -1,20 +1,30 @@
 # Frontend — Estadística Delictiva Colombia
 
-Cliente en React (Vite) + MapLibre GL JS + Zustand. Pendiente de inicializar — ver [Hito 1.1](../docs/plans/03-plan-desarrollo-frontend.md#fase-1-setup-e-infraestructura-base) para el detalle completo, incluyendo la estructura por *features* que debe seguir este proyecto:
+React (Vite + TypeScript) + Zustand + Tailwind CSS v4 + MapLibre GL JS (llega en Fase 3). **Fase 1 (Setup e Infraestructura Base) completa** — ver [`docs/plans/03-plan-desarrollo-frontend.md`](../docs/plans/03-plan-desarrollo-frontend.md) para el roadmap y [`BACKLOG.md`](../BACKLOG.md) para el estado granular.
 
 ```
 src/
-  app/                  # shell, providers, router, tema (data-theme)
+  app/                  # shell raíz — monta data-theme en <html> en sync con el store (RNF-04, HU-1.05)
   features/
-    map/                # canvas MapLibre, basemap switcher, choropleth, tooltip
-    filters/             # sidebar y su slice de estado (GlobalFilters)
-    kpis/                # tarjetas KPI, donut de género
-    evolution/           # gráfico de líneas y de barras
+    map/                 # (Fase 3) canvas MapLibre, basemap switcher, choropleth, tooltip
+    filters/              # (Fase 2) sidebar y su slice de estado
+    kpis/                 # (Fase 4) tarjetas KPI, donut de género
+    evolution/            # (Fase 4) gráfico de líneas/barras, comparación (HU-3.04)
   shared/
-    api/                 # una función fetch por endpoint de 02-api-contracts.md
-    design-system/       # tokens como variables CSS, componentes base
-    store/               # store Zustand raíz
+    api/                  # types.ts — tipos que reflejan docs/architecture/02-api-contracts.md
+    design-system/        # tokens.css — variables CSS + @theme de Tailwind, fuente: docs/design/00-design-system.md
+    store/                 # useAppStore.ts (Zustand) — tema, mapa base, GlobalFilters
 ```
 
-Tokens de diseño (Light/Dark, reconciliados): [`docs/design/00-design-system.md`](../docs/design/00-design-system.md).
-Mockups: [Figma](https://www.figma.com/design/NJXIriyDT674hHetseeX0B/estadistica_delicitva).
+## Tokens de diseño
+`shared/design-system/tokens.css` traduce la tabla de roles reconciliada de [`docs/design/00-design-system.md`](../docs/design/00-design-system.md) a variables CSS, conmutadas por `[data-theme="light"]` en `<html>` (Dark es el default **incondicional** — RNF-04 no depende de `prefers-color-scheme`). Integradas a Tailwind v4 vía `@theme` (`bg-surface-canvas`, `text-text-primary`, etc. — nunca hex ni nombres crudos M3 en componentes).
+
+## Metodología: TDD
+Igual rigor que el backend (ver `docs/plans/03-...` "Metodología"): lógica no-visual test-first con Vitest + Testing Library. Ejemplo: `shared/store/theme.test.ts` fija la regla de HU-1.05 (mapa base por defecto según tema) antes de implementarla.
+
+## Correr localmente
+```bash
+npm install
+npm test        # Vitest, debe pasar en verde
+npm run dev      # http://localhost:5173
+```

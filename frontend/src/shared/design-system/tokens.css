@@ -1,0 +1,156 @@
+/**
+ * Tokens del sistema de diseño — fuente de verdad: docs/design/00-design-system.md
+ * (tabla de roles reconciliada) + DESIGN-dark.md (escala canónica de
+ * tipografía/spacing/radios, ver nota de unificación en 00-design-system.md).
+ *
+ * Dark es el default INCONDICIONAL (RNF-04: "Dark Mode, por defecto"), no
+ * detectado por prefers-color-scheme — el usuario debe elegir Light
+ * explícitamente (HU-1.05 liga el tema al mapa base, así que el default de
+ * tema no puede depender del SO sin romper esa lógica).
+ */
+
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  /* Roles semánticos — Dark (Reconciliación 1/2 de 00-design-system.md) */
+  --surface-canvas: #0b1326;
+  --surface-panel: #131b2e;
+  --surface-panel-on: #dae2fd;
+  --surface-card: #222a3d;
+  --surface-card-hover: #2d3449;
+  --text-primary: #dae2fd;
+  --text-secondary: #bdc8d1;
+  --border: #3e484f;
+  --error: #ffb4ab;
+  --accent-interactive: #38bdf8;
+  --accent-interactive-on: #004965;
+  --accent-subtle: #8ed5ff;
+  --accent-subtle-on: #00354a;
+
+  /* Rampa del choropleth — secuencial, un solo tono (Reconciliación 3) */
+  --choropleth-1: #7a3b45;
+  --choropleth-2: #a34450;
+  --choropleth-3: #c85c5c;
+  --choropleth-4: #e37070;
+  --choropleth-5: #ff8a80;
+
+  /* Paleta de estado — fija, NO varía por tema (Hallazgo adicional) */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  /* Comparación (Reconciliación 4, HU-3.04) — reservados, no reusar */
+  --comparacion-serie-a: #3987e5;
+  --comparacion-serie-b: #d95926;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --surface-canvas: #f8f9ff;
+  --surface-panel: #eff4ff;
+  --surface-panel-on: #0b1c30;
+  --surface-card: #dce9ff;
+  --surface-card-hover: #d3e4fe;
+  --text-primary: #0b1c30;
+  --text-secondary: #45474c;
+  --border: #c5c6cd;
+  --error: #ba1a1a;
+  --accent-interactive: #2170e4;
+  --accent-interactive-on: #fefcff;
+  --accent-subtle: #0058be;
+  --accent-subtle-on: #ffffff;
+
+  --choropleth-1: #e59595;
+  --choropleth-2: #d97070;
+  --choropleth-3: #cc4d4d;
+  --choropleth-4: #a81717;
+  --choropleth-5: #701010;
+
+  --comparacion-serie-a: #2a78d6;
+  --comparacion-serie-b: #eb6834;
+}
+
+@theme {
+  /* Colores — puentean a las custom properties de arriba para que
+     cambien con [data-theme] sin que Tailwind necesite saberlo. */
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-panel-on: var(--surface-panel-on);
+  --color-surface-card: var(--surface-card);
+  --color-surface-card-hover: var(--surface-card-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border: var(--border);
+  --color-error: var(--error);
+  --color-accent-interactive: var(--accent-interactive);
+  --color-accent-interactive-on: var(--accent-interactive-on);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-on: var(--accent-subtle-on);
+
+  --color-choropleth-1: var(--choropleth-1);
+  --color-choropleth-2: var(--choropleth-2);
+  --color-choropleth-3: var(--choropleth-3);
+  --color-choropleth-4: var(--choropleth-4);
+  --color-choropleth-5: var(--choropleth-5);
+
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-serious: var(--status-serious);
+  --color-status-critical: var(--status-critical);
+
+  --color-comparacion-serie-a: var(--comparacion-serie-a);
+  --color-comparacion-serie-b: var(--comparacion-serie-b);
+
+  /* Tipografía — escala canónica única (no varía por tema, solo el color) */
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--font-weight: 800;
+  --text-display-lg--letter-spacing: -0.02em;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-lg--letter-spacing: -0.01em;
+
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--font-weight: 700;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 20px;
+
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--font-weight: 600;
+  --text-label-md--letter-spacing: 0.05em;
+
+  --text-code-sm: 13px;
+  --text-code-sm--line-height: 18px;
+  --text-code-sm--font-weight: 500;
+
+  /* Radios — escala canónica (DESIGN-dark.md) */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Spacing: la escala de 4px del proyecto (xs=4/sm=8/md=16/lg=24/xl=32)
+     ya coincide con la escala default de Tailwind (xs=1, sm=2, md=4, lg=6,
+     xl=8) — se usa directamente, sin redeclarar tokens redundantes. */
+}

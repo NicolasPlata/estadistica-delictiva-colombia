@@ -10,11 +10,17 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] **Backend completo → arrancar Frontend** (`docs/plans/03-plan-desarrollo-frontend.md`, Fase 1: Vite + estructura por features). Incluye Hito 4.3 (comparación) más adelante en la Fase 4.
+- [ ] Frontend — Fase 2 (`docs/plans/03-plan-desarrollo-frontend.md`): Layout principal (Sidebar + Main Area) y componentes base de filtros.
 
 ## ✅ Hecho
 
-**2026-08-06 — RF-09 resuelto: comparación paralela entra al alcance (HU-3.04), mockup completo**
+**2026-08-06 — Frontend Fase 1: Setup e Infraestructura Base (Hito 1.1 y 1.2) — TDD**
+- `npm create vite@latest` (React + TypeScript) dentro de `frontend/`, estructura por *features* (`app/`, `features/{map,filters,kpis,evolution}`, `shared/{api,design-system,store}`) en vez de las típicas carpetas por tipo de archivo.
+- `shared/design-system/tokens.css`: la tabla de roles reconciliada de `00-design-system.md` traducida a variables CSS, conmutadas por `[data-theme]` en `<html>` (Dark incondicional por defecto, RNF-04 — no depende de `prefers-color-scheme`, a propósito, porque el default de tema no puede depender del SO sin romper la lógica de HU-1.05). Integrado a Tailwind v4 vía `@theme` — sin tokens de spacing redundantes, la escala de 4px del proyecto ya coincide con la default de Tailwind.
+- `shared/store/useAppStore.ts` (Zustand): tema, mapa base y `GlobalFilters`, con la lógica de HU-1.05 (`defaultBasemapForTheme`) escrita test-first — 6 tests cubriendo default/cambio de tema/selección manual/merge de filtros parciales.
+- `app/App.tsx`: shell raíz que sincroniza `data-theme` con el store, testeado con Testing Library (incluye confirmar que el atributo cambia cuando el store cambia, no solo el valor inicial).
+- **Verificación visual real:** sin extensión de Chrome disponible en este entorno, se usó `google-chrome --headless --screenshot` directo para confirmar que el tema oscuro por defecto renderiza con los colores/tipografía exactos de los tokens. El tema claro se verificó solo por test automatizado, no visualmente — pendiente confirmar a ojo cuando haya más UI que mirar.
+- 11/11 tests en verde, `tsc -b` y `oxlint` limpios.
 - Decisión pendiente desde la revisión de planes previa a la Fase 3: RF-09 ("comparar visualmente datos de diferentes periodos o regiones de manera paralela") no tenía HU ni mockup. El usuario confirmó que entra al alcance actual.
 - Diseño: extiende el panel de evolución existente (HU-3.03) con un control "Comparar" → "Por Región" / "Por Periodo", superponiendo 2 series en el mismo gráfico (no dos gráficos separados). **Sin cambios de backend** — cada serie es una llamada independiente a `POST /api/v1/stats/evolution` con su propio `GlobalFilters`, orquestada enteramente en el frontend.
 - Paleta categórica nueva `comparacion-serie-a`/`comparacion-serie-b` (azul/naranja, slots 1-2 de la paleta default del skill de dataviz), validada con `validate_palette.js` contra las superficies reales de ambos temas — todos los checks en verde. Reservada exclusivamente para este uso, documentada en `docs/design/00-design-system.md`.
