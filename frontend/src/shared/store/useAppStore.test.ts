@@ -144,4 +144,30 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().geometryStatus.MUNICIPIO).toBe("error");
     expect(useAppStore.getState().geometryCache.MUNICIPIO).toBeUndefined();
   });
+
+  it("defaults selectedRegion to null (HU-3.03: sin territorio aislado)", () => {
+    expect(useAppStore.getState().selectedRegion).toBeNull();
+  });
+
+  it("setSelectedRegion stores the clicked region (HU-3.03)", () => {
+    useAppStore.getState().setSelectedRegion({ codigoDane: 11, nombre: "BOGOTÁ, D.C." });
+
+    expect(useAppStore.getState().selectedRegion).toEqual({ codigoDane: 11, nombre: "BOGOTÁ, D.C." });
+  });
+
+  it("clearSelectedRegion resets it back to null", () => {
+    useAppStore.getState().setSelectedRegion({ codigoDane: 11, nombre: "BOGOTÁ, D.C." });
+
+    useAppStore.getState().clearSelectedRegion();
+
+    expect(useAppStore.getState().selectedRegion).toBeNull();
+  });
+
+  it("switching granularidad clears the selected region (el codigo_dane ya no refiere a la misma entidad)", () => {
+    useAppStore.getState().setSelectedRegion({ codigoDane: 11, nombre: "BOGOTÁ, D.C." });
+
+    useAppStore.getState().setGranularidad("MUNICIPIO");
+
+    expect(useAppStore.getState().selectedRegion).toBeNull();
+  });
 });

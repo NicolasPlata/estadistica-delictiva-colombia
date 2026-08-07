@@ -31,6 +31,10 @@ vi.mock("../shared/api/kpis", () => ({
   }),
 }));
 
+vi.mock("../shared/api/evolution", () => ({
+  fetchEvolution: vi.fn().mockResolvedValue({ region_label: "Nacional", series: [] }),
+}));
+
 describe("App", () => {
   beforeEach(() => {
     useAppStore.setState(useAppStore.getInitialState());

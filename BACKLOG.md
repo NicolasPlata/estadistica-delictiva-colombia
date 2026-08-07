@@ -10,10 +10,17 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] Frontend — Fase 4, Hito 4.2 (`docs/plans/03-plan-desarrollo-frontend.md`): gráfico de evolución regional al hacer clic en un territorio del mapa (HU-3.03), línea nacional por defecto (HU-3.02).
-- [ ] Frontend — Fase 4, Hito 4.3: comparación paralela por región/periodo (HU-3.04, RF-09).
+- [ ] Frontend — Fase 4, Hito 4.3 (`docs/plans/03-plan-desarrollo-frontend.md`): comparación paralela por región/periodo (HU-3.04, RF-09), sobre el mismo `EvolutionPanel`.
 
 ## ✅ Hecho
+
+**2026-08-06 — Frontend Fase 4, Hito 4.2: Gráfico de Evolución Regional (HU-3.02/HU-3.03) — TDD**
+- `shared/api/evolution.ts` (`fetchEvolution`, TDD) + `selectedRegion` en `useAppStore` (TDD, 4 tests): territorio aislado al hacer clic en el mapa, deliberadamente separado de `GlobalFilters` (no filtra el mapa/KPIs, solo enfoca el panel de evolución) y se limpia automáticamente al cambiar de granularidad (un `codigo_dane` de departamento y uno de municipio no son la misma entidad).
+- `features/evolution/buildEvolutionFilters.ts` (TDD): traduce el territorio seleccionado a `departamento_id`/`municipio_id` según la granularidad activa, sin tocar el resto de filtros. `formatPeriodo.ts` (TDD): abrevia `"YYYY-MM"` a `"Mes Año"` para que quepan hasta 72 puntos mensuales en el eje X.
+- `EvolutionPanel.tsx`: línea mensual nacional por defecto (HU-3.02) o barras anuales del territorio aislado (HU-3.03, título dinámico "Evolución Anual — {región}"), botón de cierre para volver a la vista nacional. Un único color (`accent-interactive`) porque es una sola serie — sin leyenda, la regla del skill de dataviz ("un solo color no necesita leyenda, el título ya dice qué se grafica").
+- `MapCanvas.tsx`: clic en una región dispara `setSelectedRegion` y resalta el territorio con un borde de acento vía `feature-state.selected` (se limpia la selección anterior antes de marcar la nueva, nunca dos regiones resaltadas a la vez).
+- Verificado con datos reales end-to-end (backend local + Playwright): línea nacional mensual con la caída real de 2020 (COVID) visible, clic en Tolima cambia a barras anuales con el borde de resalte correcto, botón de cierre vuelve a la vista nacional.
+- 59/59 tests en verde, `tsc -b` y `oxlint` limpios.
 
 **2026-08-06 — Frontend Fase 4, Hito 4.1: Panel de KPIs y Donut de Género (HU-3.01) — TDD**
 - `shared/api/kpis.ts` (`fetchKpis`, TDD): a diferencia de `/map/stats`, el body de `POST /api/v1/stats/kpi` es `GlobalFilters` directamente, sin envolver.

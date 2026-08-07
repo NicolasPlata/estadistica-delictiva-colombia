@@ -13,6 +13,14 @@ import { defaultBasemapForTheme } from "./theme";
 type VocabularioStatus = "idle" | "loading" | "ready" | "error";
 type GeometryStatus = "loading" | "ready" | "error";
 
+/** Territorio aislado al hacer clic en el mapa (HU-3.03) — vive aparte de
+ * `GlobalFilters` porque no filtra el mapa/KPIs, solo enfoca el panel de
+ * evolución (ver `docs/plans/03-...` Hito 4.2). */
+export interface SelectedRegion {
+  codigoDane: number;
+  nombre: string;
+}
+
 interface AppState {
   theme: Theme;
   basemap: Basemap;
@@ -42,6 +50,10 @@ interface AppState {
   geometryCache: Partial<Record<Granularidad, RegionFeatureCollection>>;
   geometryStatus: Partial<Record<Granularidad, GeometryStatus>>;
   loadGeometry: (granularidad: Granularidad) => Promise<void>;
+  /** HU-3.03 — territorio elegido en el mapa para el panel de evolución. */
+  selectedRegion: SelectedRegion | null;
+  setSelectedRegion: (region: SelectedRegion) => void;
+  clearSelectedRegion: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -54,6 +66,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   vocabularioStatus: "idle",
   geometryCache: {},
   geometryStatus: {},
+  selectedRegion: null,
 
   setTheme: (theme) =>
     set({ theme, basemap: defaultBasemapForTheme(theme) }),
@@ -63,7 +76,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   setFilters: (patch) =>
     set((state) => ({ filters: { ...state.filters, ...patch } })),
 
-  setGranularidad: (granularidad) => set({ granularidad }),
+  // El codigo_dane de un departamento y el de un municipio no son la misma
+  // entidad — un territorio aislado antes del cambio dejaría de tener
+  // sentido, así que se descarta junto con la granularidad.
+  setGranularidad: (granularidad) => set({ granularidad, selectedRegion: null }),
+
+  setSelectedRegion: (region) => set({ selectedRegion: region }),
+
+  clearSelectedRegion: () => set({ selectedRegion: null }),
 
   loadVocabulario: async () => {
     set({ vocabularioStatus: "loading" });

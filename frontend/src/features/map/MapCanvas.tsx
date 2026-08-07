@@ -1,6 +1,6 @@
 import type { Map as MaplibreMap, MapLayerMouseEvent, RasterTileSource } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Map, { Layer, Source } from "react-map-gl/maplibre";
 import { fetchMapStats } from "../../shared/api/mapStats";
 import { useAppStore } from "../../shared/store/useAppStore";
@@ -9,7 +9,7 @@ import { BASEMAP_SOURCES } from "./basemapSources";
 import { buildChoroplethExpression, computeQuantileBreaks } from "./choropleth";
 import { toFeatureStateEntries } from "./featureState";
 import { type HoveredRegion, MapTooltip } from "./MapTooltip";
-import { readBorderColor, readChoroplethRamp } from "./readDesignTokens";
+import { readAccentColor, readBorderColor, readChoroplethRamp } from "./readDesignTokens";
 
 const GEOMETRY_SOURCE_ID = "regiones";
 const FILL_LAYER_ID = "regiones-fill";
@@ -38,9 +38,12 @@ export function MapCanvas() {
   const filters = useAppStore((s) => s.filters);
   const geometryCache = useAppStore((s) => s.geometryCache);
   const loadGeometry = useAppStore((s) => s.loadGeometry);
+  const selectedRegion = useAppStore((s) => s.selectedRegion);
+  const setSelectedRegion = useAppStore((s) => s.setSelectedRegion);
 
   const [mapStatsData, setMapStatsData] = useState<Record<string, number>>({});
   const [hovered, setHovered] = useState<HoveredRegion | null>(null);
+  const previousSelectedId = useRef<number | null>(null);
 
   const geometry = geometryCache[granularidad];
   const source = BASEMAP_SOURCES[basemap];
@@ -106,6 +109,36 @@ export function MapCanvas() {
     };
   }, [map, geometry, granularidad, mapStatsData]);
 
+  // HU-3.03: resalta el territorio aislado en el mapa — limpia el
+  // feature-state de la selección anterior antes de marcar la nueva, para
+  // que nunca queden dos regiones resaltadas a la vez.
+  useEffect(() => {
+    if (!map || !map.getSource(GEOMETRY_SOURCE_ID)) return;
+
+    if (previousSelectedId.current !== null) {
+      map.setFeatureState(
+        { source: GEOMETRY_SOURCE_ID, id: previousSelectedId.current },
+        { selected: false },
+      );
+    }
+    if (selectedRegion) {
+      map.setFeatureState(
+        { source: GEOMETRY_SOURCE_ID, id: selectedRegion.codigoDane },
+        { selected: true },
+      );
+    }
+    previousSelectedId.current = selectedRegion?.codigoDane ?? null;
+  }, [map, selectedRegion, geometry]);
+
+  function handleClick(event: MapLayerMouseEvent) {
+    const feature = event.features?.[0];
+    if (!feature?.properties) return;
+    setSelectedRegion({
+      codigoDane: feature.properties.codigo_dane,
+      nombre: feature.properties.nombre_region,
+    });
+  }
+
   // `readChoroplethRamp`/`readBorderColor` leen `getComputedStyle`, que
   // cambia con `[data-theme]` — `theme` no se usa dentro del cuerpo, pero
   // sin él en las dependencias el mapa se queda pintado con los colores
@@ -121,6 +154,12 @@ export function MapCanvas() {
 
   const lineColor = useMemo(
     () => readBorderColor(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [theme],
+  );
+
+  const selectedLineColor = useMemo(
+    () => readAccentColor(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [theme],
   );
@@ -179,6 +218,7 @@ export function MapCanvas() {
         interactiveLayerIds={geometry ? [FILL_LAYER_ID] : []}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHovered(null)}
+        onClick={handleClick}
         attributionControl={false}
       >
         {geometry && (
@@ -200,9 +240,19 @@ export function MapCanvas() {
               id={LINE_LAYER_ID}
               type="line"
               paint={{
-                "line-color": lineColor,
-                "line-opacity": ["case", ["==", ["feature-state", "cantidad"], null], 0.4, 0.8] as never,
-                "line-width": 1,
+                "line-color": [
+                  "case",
+                  ["boolean", ["feature-state", "selected"], false],
+                  selectedLineColor,
+                  lineColor,
+                ] as never,
+                "line-opacity": [
+                  "case",
+                  ["boolean", ["feature-state", "selected"], false],
+                  1,
+                  ["case", ["==", ["feature-state", "cantidad"], null], 0.4, 0.8],
+                ] as never,
+                "line-width": ["case", ["boolean", ["feature-state", "selected"], false], 3, 1] as never,
               }}
             />
           </Source>

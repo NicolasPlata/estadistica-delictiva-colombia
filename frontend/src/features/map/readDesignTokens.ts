@@ -28,3 +28,8 @@ export function readSurfaceCanvas(): string {
 export function readBorderColor(): string {
   return readCssVar("--border");
 }
+
+/** Usado para resaltar el territorio aislado en el mapa (HU-3.03). */
+export function readAccentColor(): string {
+  return readCssVar("--accent-interactive");
+}

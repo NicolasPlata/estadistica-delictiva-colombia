@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { EvolutionPanel } from "../features/evolution/EvolutionPanel";
 import { Sidebar } from "../features/filters/Sidebar";
 import { KpisPanel } from "../features/kpis/KpisPanel";
 import { MapCanvas } from "../features/map/MapCanvas";
@@ -26,6 +27,7 @@ export function App() {
         <main className="flex-1 relative">
           <MapCanvas />
           <KpisPanel />
+          <EvolutionPanel />
         </main>
       </div>
     </div>
