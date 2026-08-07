@@ -7,7 +7,7 @@ El sistema es un **Dashboard Interactivo de Estadística Delictiva** enfocado en
 
 ### Visualización Cartográfica
 *   **RF-01:** El sistema debe renderizar un mapa interactivo de Colombia.
-*   **RF-02:** El mapa debe mostrar mapas de calor (Choropleth) basados en la densidad o el recuento absoluto de delitos. 
+*   **RF-02:** El mapa debe mostrar mapas de calor (Choropleth) basados en el recuento absoluto de delitos o en la tasa de criminalidad normalizada por población (delitos por cada 100.000 habitantes), alternable por el usuario (por defecto: tasa) — ver HU-1.06. Debe incluir una leyenda fija que indique explícitamente la dirección de la escala de color ("más oscuro = más peligroso").
 *   **RF-03:** El usuario debe poder alternar libremente la granularidad de la capa visible entre "Nivel Departamental" y "Nivel Municipal", incluso al tener una vista nacional completa.
 *   **RF-04:** El usuario debe poder interactuar con las geometrías (hover, click) para obtener información detallada en Tooltips.
 *   **RF-10:** El sistema debe ofrecer 3 mapas base intercambiables (OpenStreetMap, Satelital y Oscuro) mediante un control flotante sobre el mapa. El mapa base por defecto depende del tema activo de la aplicación (OpenStreetMap en Light, Oscuro en Dark) y se reestablece a ese valor por defecto cada vez que el usuario cambia de tema — el mapa base elegido manualmente no persiste entre cambios de tema. Ver [Mapas Base](../architecture/01-arquitectura.md#mapas-base-basemaps) para las fuentes técnicas.
@@ -24,6 +24,7 @@ El sistema es un **Dashboard Interactivo de Estadística Delictiva** enfocado en
 *   **RF-07:** El sistema debe mostrar métricas clave de alto nivel (KPIs) como total de delitos, variaciones porcentuales, el delito más común del contexto filtrado y distribución de víctimas por género.
 *   **RF-08:** El sistema debe incluir gráficos estadísticos acordes a la selección actual. Específicamente, al seleccionar un departamento o municipio, debe desplegarse un gráfico de barras ilustrando la evolución anual de los delitos en dicha región.
 *   **RF-09:** El usuario debe poder comparar visualmente datos de diferentes periodos o diferentes regiones de manera paralela.
+*   **RF-11:** El sistema debe mostrar el desglose de delitos por tipo específico (tabla completa, ordenada de mayor a menor) y por categoría agrupada (gráfica de pastel, máximo 8 categorías) para la región seleccionada o, por defecto, a nivel nacional — filtrable por año. Ver HU-3.05.
 
 ## 3. Requerimientos No Funcionales (RNF)
 

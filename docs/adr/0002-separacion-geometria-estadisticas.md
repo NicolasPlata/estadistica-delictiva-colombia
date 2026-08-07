@@ -32,3 +32,5 @@ El frontend une ambas fuentes en el cliente mediante `codigo_dane`, usando las c
 
 ## Documentos Afectados
 Esta decisión reemplaza la Sección 3 de `02-api-contracts.md`, la RN-09 de `reglas-negocio.md`, y el Hito 4.2 de `02-plan-desarrollo-backend.md` / Hito 3.2 de `03-plan-desarrollo-frontend.md`.
+
+*(Nota 2026-08-07, Fase 6: `POST /api/v1/map/stats` ganó un campo opcional `metrica` — el diccionario ligero `{codigo_dane: valor}` de la sección "Decisión" ahora puede contener una tasa per cápita en vez de un conteo absoluto, según `metrica`. No cambia la decisión de este ADR: sigue siendo un único payload liviano, sin geometría, calculado a partir de `GlobalFilters` — solo cambia qué significa `valor`. Ver RN-12 en `reglas-negocio.md` y `02-api-contracts.md` §3.2.)*

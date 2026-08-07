@@ -18,7 +18,7 @@ El sistema sigue un modelo desacoplado (API-First) utilizando las siguientes tec
 *   **⚙️ Backend (Logic Layer):** `Rust` (Axum/Actix-Web) + `SQLx`.
     *   *Misión:* Procesamiento asíncrono ultra-rápido, gestión segura de memoria y exposición de endpoints RESTful eficientes (incluyendo renderizado MVT/GeoJSON al vuelo).
 *   **💻 Frontend (Presentation Layer):** `React` (Vite) + `MapLibre GL JS` + `TailwindCSS/Zustand`.
-    *   *Misión:* Experiencia de usuario inmersiva (Dark Mode, Glassmorphism). Renderizado vectorial por GPU (WebGL) capaz de mover 60FPS sin sobrecargar el navegador.
+    *   *Misión:* Experiencia de usuario inmersiva (Light/Dark Mode, Glassmorphism — Light es el default desde 2026-08-07, RNF-04). Renderizado vectorial por GPU (WebGL) capaz de mover 60FPS sin sobrecargar el navegador.
 
 ---
 

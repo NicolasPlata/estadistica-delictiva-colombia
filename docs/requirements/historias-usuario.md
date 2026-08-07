@@ -12,7 +12,7 @@ El siguiente documento detalla el comportamiento de la aplicación desde la pers
 **Para** tener un lienzo sobre el cual analizar los datos geográficamente.  
 * **Criterios de Aceptación:**
   - El mapa debe renderizarse utilizando MapLibre GL JS y WebGL.
-  - El tema visual debe aplicar el "Dark Mode" diseñado (Glassmorphism) por defecto, con posibilidad de alternar a "Light Mode" (ver [Sistema de Diseño](../design/00-design-system.md)).
+  - El tema visual debe aplicar el "Light Mode" diseñado (Glassmorphism) por defecto, con posibilidad de alternar a "Dark Mode" (ver [Sistema de Diseño](../design/00-design-system.md)). *(Revisado 2026-08-07, pedido explícito del usuario: el default cambió de Dark a Light — RNF-04.)*
   - La carga del mapa no debe interrumpir el hilo principal del navegador.
 
 ### HU-1.02: Visualizar mapa de calor (Densidad)
@@ -21,8 +21,9 @@ El siguiente documento detalla el comportamiento de la aplicación desde la pers
 **Para** identificar rápidamente las "zonas rojas" o focos de concentración.  
 * **Criterios de Aceptación:**
   - Los polígonos vectoriales deben servirse desde el backend en formato MVT o GeoJSON optimizado.
-  - Debe haber una rampa de color (escala de colores coherente) de menor a mayor intensidad.
+  - Debe haber una rampa de color (escala de colores coherente) de menor a mayor intensidad, donde el tono más oscuro representa siempre la mayor peligrosidad/densidad, en ambos temas (Light y Dark) — pedido explícito del usuario, ver Reconciliación 3 de `00-design-system.md`.
   - Si un municipio no tiene datos en el filtro, debe pintarse en un color neutro o transparente.
+  - Debe existir una leyenda fija y siempre visible (lateral izquierdo del mapa) que indique explícitamente la dirección de la escala ("más oscuro = más peligroso"), no solo una rampa de color sin explicación — pedido explícito del usuario (Fase 8, `docs/plans/04-plan-desarrollo-funcionalidades-v2.md`).
 
 ### HU-1.03: Tooltips con información detallada
 **Como** usuario  
@@ -51,6 +52,17 @@ El siguiente documento detalla el comportamiento de la aplicación desde la pers
   - Cambiar el tema de la aplicación (Light/Dark) reestablece el mapa base a su valor por defecto para ese tema, incluso si el usuario había seleccionado manualmente otro mapa base antes del cambio.
   - Cambiar de mapa base no debe afectar ni recargar la capa de choropleth/estadísticas — son capas independientes.
   - Debe mostrarse la atribución legal del proveedor activo (RNF-09).
+
+### HU-1.06: Tasa de Criminalidad per Cápita (RF-02, Fase 6)
+**Como** analista territorial  
+**Quiero** alternar el mapa de calor entre el conteo absoluto de delitos y la tasa normalizada por población (por cada 100.000 habitantes)  
+**Para** identificar el riesgo real que corre un habitante de una región, no solo dónde ocurren más delitos en términos absolutos (una capital grande puede tener más delitos absolutos que un municipio pequeño y aun así ser más segura por habitante).  
+* **Criterios de Aceptación:**
+  - Un control "Ver por" (junto al de Granularidad) alterna entre "Cantidad" y "Tasa x100k hab." — por defecto la aplicación se abre en "Tasa" (pedido explícito del usuario, 2026-08-07).
+  - La tasa se calcula como delitos totales del rango filtrado ÷ población promedio de esos mismos años × 100.000 (RN-12, `reglas-negocio.md`), usando las proyecciones de población del DANE (RN-11).
+  - Una región sin población conocida para el rango filtrado no debe mostrar una tasa inventada ni dividir por cero — se pinta como "sin dato", igual que una región sin registros delictivos.
+  - El tooltip y la leyenda del mapa (HU-1.02) deben reflejar la unidad activa (delitos absolutos o tasa) con el formato correspondiente.
+  - Cambiar la métrica no requiere una llamada adicional a `/api/v1/map/geometry` — solo `/api/v1/map/stats` se vuelve a pedir con el campo `metrica`.
 
 ---
 
@@ -123,3 +135,14 @@ El siguiente documento detalla el comportamiento de la aplicación desde la pers
   - Los colores de Serie A/Serie B son fijos y reservados para este uso (no se reutilizan en otro contexto de la app) — ver `docs/design/00-design-system.md`.
 
 *(Nota 2026-08-07: se eliminó el sub-modo "Por Periodo" — comparar dos rangos de años de la misma región no resultó útil en la práctica, dado que el caso de uso real siempre compara el mismo periodo entre dos territorios. Ver `BACKLOG.md`.)*
+
+### HU-3.05: Desglose de Delitos por Tipo (Tabla + Gráfica de Pastel, Fase 7)
+**Como** analista de seguridad  
+**Quiero** ver el desglose de delitos por tipo específico (tabla) y por categoría agrupada (gráfica de pastel) de la región que estoy analizando  
+**Para** entender qué tipos de delito componen el total, no solo cuántos hay en conjunto.  
+* **Criterios de Aceptación:**
+  - El panel se muestra a nivel Nacional por defecto (sin ninguna región seleccionada) y se enfoca en la región elegida al hacer clic en el mapa (mismo `selectedRegion` que HU-3.03) — no depende de que el usuario aísle una región primero.
+  - La tabla lista todos los delitos homologados presentes en el filtro actual, ordenados de mayor a menor cantidad, sin truncar el nombre del delito.
+  - La gráfica de pastel agrupa los delitos en un máximo de 8 categorías padre (RN-04) — nunca muestra las decenas de delitos individuales directamente, para mantenerse legible. Cada categoría tiene un color fijo y reservado (Reconciliación 6, `00-design-system.md`); la leyenda nunca trunca el nombre de la categoría ni oculta el porcentaje, incluso si el nombre es largo.
+  - Un selector de año local permite acotar el desglose a un año específico del rango 2020-2025, con "Todos los años" como opción por defecto.
+  - La suma de la tabla y la suma de la gráfica de pastel deben coincidir exactamente entre sí y con el KPI "Total de Delitos" (HU-3.01) para los mismos filtros.
