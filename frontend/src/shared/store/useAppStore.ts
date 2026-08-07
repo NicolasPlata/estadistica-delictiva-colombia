@@ -78,7 +78,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   basemap: defaultBasemapForTheme("dark"),
   filters: {},
   granularidad: "DEPARTAMENTO",
-  metrica: "ABSOLUTA",
+  // Default a Tasa (no Cantidad): pedido explícito del usuario (2026-08-07)
+  // — normalizar por población es la lectura más útil al abrir el mapa por
+  // primera vez, antes de que el usuario decida mirar el conteo absoluto.
+  metrica: "TASA",
   vocabulario: null,
   vocabularioStatus: "idle",
   geometryCache: {},

@@ -72,14 +72,14 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().granularidad).toBe("MUNICIPIO");
   });
 
-  it("defaults metrica to ABSOLUTA (Fase 6)", () => {
-    expect(useAppStore.getState().metrica).toBe("ABSOLUTA");
+  it("defaults metrica to TASA (pedido explícito del usuario, 2026-08-07)", () => {
+    expect(useAppStore.getState().metrica).toBe("TASA");
   });
 
   it("setMetrica switches the toggle", () => {
-    useAppStore.getState().setMetrica("TASA");
+    useAppStore.getState().setMetrica("ABSOLUTA");
 
-    expect(useAppStore.getState().metrica).toBe("TASA");
+    expect(useAppStore.getState().metrica).toBe("ABSOLUTA");
   });
 
   it("defaults vocabulario status to 'idle' with no data", () => {
