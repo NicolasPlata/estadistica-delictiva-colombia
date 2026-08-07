@@ -9,20 +9,17 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 ## 🔴 Decisiones pendientes del usuario
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
-## 🟡 En progreso
-- [ ] Figma: mockup de HU-3.04 (comparación paralela) en el panel de evolución de las pantallas de Flow Screens.
-
 ## 🔵 Próximo (en orden)
 - [ ] **Backend completo → arrancar Frontend** (`docs/plans/03-plan-desarrollo-frontend.md`, Fase 1: Vite + estructura por features). Incluye Hito 4.3 (comparación) más adelante en la Fase 4.
 
 ## ✅ Hecho
 
-**2026-08-06 — RF-09 resuelto: comparación paralela entra al alcance (HU-3.04)**
+**2026-08-06 — RF-09 resuelto: comparación paralela entra al alcance (HU-3.04), mockup completo**
 - Decisión pendiente desde la revisión de planes previa a la Fase 3: RF-09 ("comparar visualmente datos de diferentes periodos o regiones de manera paralela") no tenía HU ni mockup. El usuario confirmó que entra al alcance actual.
 - Diseño: extiende el panel de evolución existente (HU-3.03) con un control "Comparar" → "Por Región" / "Por Periodo", superponiendo 2 series en el mismo gráfico (no dos gráficos separados). **Sin cambios de backend** — cada serie es una llamada independiente a `POST /api/v1/stats/evolution` con su propio `GlobalFilters`, orquestada enteramente en el frontend.
 - Paleta categórica nueva `comparacion-serie-a`/`comparacion-serie-b` (azul/naranja, slots 1-2 de la paleta default del skill de dataviz), validada con `validate_palette.js` contra las superficies reales de ambos temas — todos los checks en verde. Reservada exclusivamente para este uso, documentada en `docs/design/00-design-system.md`.
 - Agregada HU-3.04 (`historias-usuario.md`) y Hito 4.3 (`03-plan-desarrollo-frontend.md`).
-- Pendiente: mockup en Figma (ver "En progreso").
+- **Figma:** nueva variable semántica en ambos temas (Foundations, `4:5`), y 6ª pantalla de Flow Screens ("Dashboard — Desktop — Dark — Comparación", `54:6`) clonada de "Región Seleccionada" con el panel de evolución extendido: control Comparar, 2 series superpuestas (línea + marcadores) recoloreadas a los tokens nuevos, leyenda, y título dinámico. Verificado con 3 screenshots, sin recortes ni solapamientos con las otras 5 pantallas.
 
 **2026-08-06 — Backend Fase 5, Hito 5.2: Profiling y Optimización (RNF-03) — Backend completo**
 - Medido con el servidor real (release build), no solo `EXPLAIN ANALYZE` aislado: `/api/v1/stats/kpi` sin filtros tardaba **1.2s** (4x el presupuesto de RNF-03), `/metadata/filtros` **0.94s**, `/map/geometry/MUNICIPIO` **6.3s** (peor aún para `DEPARTAMENTO`: 9.1s).
