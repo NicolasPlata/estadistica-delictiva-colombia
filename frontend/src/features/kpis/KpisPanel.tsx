@@ -17,6 +17,31 @@ const TONE_CLASSES = {
   neutral: "text-text-secondary",
 };
 
+/** Loader (Hito 5.2) — reserva el mismo espacio que el panel real para
+ * que no salte el layout cuando los datos llegan. */
+function KpisPanelSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Cargando KPIs"
+      className="absolute top-4 left-4 flex items-center gap-4 rounded-lg border border-border bg-surface-panel/80 backdrop-blur-md px-4 py-3 shadow-lg animate-pulse"
+    >
+      <div className="flex flex-col gap-1.5 w-32">
+        <div className="h-2.5 w-20 rounded bg-surface-card-hover" />
+        <div className="h-5 w-24 rounded bg-surface-card-hover" />
+        <div className="h-2.5 w-28 rounded bg-surface-card-hover" />
+      </div>
+      <div className="flex flex-col gap-1.5 w-40 border-l border-border pl-4">
+        <div className="h-2.5 w-24 rounded bg-surface-card-hover" />
+        <div className="h-3 w-32 rounded bg-surface-card-hover" />
+        <div className="h-2.5 w-24 rounded bg-surface-card-hover mt-1" />
+        <div className="h-3 w-20 rounded bg-surface-card-hover" />
+      </div>
+      <div className="w-20 h-20 rounded-full bg-surface-card-hover shrink-0" />
+    </div>
+  );
+}
+
 /** Panel flotante de KPIs (HU-3.01) — reactivo a `GlobalFilters`, nunca a
  * la granularidad ni al mapa base. Vive como hermano de `MapCanvas` en el
  * Main Area (no dentro de él: no toca MapLibre). */
@@ -38,7 +63,7 @@ export function KpisPanel() {
     };
   }, [filters]);
 
-  if (!kpis) return null;
+  if (!kpis) return <KpisPanelSkeleton />;
 
   const variacion = formatVariacion(kpis.variacion_porcentual);
   const donutData = buildGeneroDonutData(kpis.distribucion_genero);

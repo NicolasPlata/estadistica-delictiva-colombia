@@ -14,6 +14,14 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['maplibre-gl'],
   },
+  build: {
+    // maplibre-gl es ~970KB sin comprimir (~250KB gzip) — es el tamaño
+    // real de una librería de mapas WebGL completa, ya vive en su propio
+    // chunk lazy-loaded (Hito 5.2, App.tsx) y nunca bloquea el bundle
+    // crítico inicial, así que la advertencia por defecto (500KB) es
+    // ruido, no una señal de que falte dividir algo más.
+    chunkSizeWarningLimit: 1100,
+  },
   test: {
     environment: 'jsdom',
     globals: true,

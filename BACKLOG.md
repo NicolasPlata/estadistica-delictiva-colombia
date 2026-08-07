@@ -10,10 +10,16 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] Frontend — Fase 5 (`docs/plans/03-plan-desarrollo-frontend.md`): Hito 5.1 (reactividad ya cableada de facto desde la Fase 4 — revisar si queda algo pendiente) e Hito 5.2 (code splitting, TTV<2s, loaders).
-- [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica").
+- [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica") — único punto abierto conocido; el resto del plan de frontend (`docs/plans/03-plan-desarrollo-frontend.md`) está completo.
 
 ## ✅ Hecho
+
+**2026-08-06 — Frontend Fase 5: Integración Total y Optimización — Frontend completo**
+- **Hito 5.1 (Reactividad):** ya satisfecho de facto desde la Fase 2 — cada filtro llama a `setFilters` directamente al cambiar (sin botón "Aplicar Filtros", la alternativa explícita que el plan permitía), y `MapCanvas`/`KpisPanel`/`EvolutionPanel` se suscriben a `filters` con selectores Zustand acotados (`useAppStore((s) => s.filters)`), por lo que cada uno refresca de forma independiente y eficiente sin re-renders cruzados. No hubo trabajo nuevo que hacer, solo confirmarlo.
+- **Hito 5.2 (TTV):** `MapCanvas`/`KpisPanel`/`EvolutionPanel` pasados a `React.lazy` + `Suspense` (cada uno en su propio boundary, para que los paneles livianos de Recharts no esperen al chunk de MapLibre) — el bundle crítico inicial bajó de 630KB a 190KB (185KB→60KB gzip); `maplibre-gl` (~970KB) y Recharts ahora cargan en paralelo tras el primer pintado, no antes. `chunkSizeWarningLimit` ajustado con nota explicando por qué (tamaño real e inevitable de una librería de mapas WebGL completa, ya aislada en su propio chunk).
+- Loaders: `KpisPanelSkeleton`/`EvolutionPanelSkeleton` (esqueletos `animate-pulse` del mismo tamaño que el panel real, sin salto de layout) reemplazan el `return null` previo durante la carga de datos; `MapCanvasSkeleton` (spinner) cubre la carga del chunk.
+- **Medido con build de producción real (`vite preview`), no con el dev server:** shell (Header+Sidebar) visible en 108ms, mapa montado en 954ms — muy por debajo del presupuesto de 2s de RNF-01. FPS del mapa: 60.0 en reposo y 60.3 durante paneo activo, con la granularidad más pesada (1.122 municipios) — MapLibre no pierde frames ni con WebGL por software (Chromium headless).
+- 74/74 tests en verde, `tsc -b` y `oxlint` limpios. **Frontend completo** (Fases 1-5) salvo la deuda de responsividad móvil ya registrada.
 
 **2026-08-06 — Frontend Fase 4, Hito 4.3: Comparación Paralela (HU-3.04, RF-09) — TDD, Fase 4 completa**
 - `useAppStore`: `comparisonMode`/`comparisonRegion`/`comparisonPeriodo` (TDD, 7 tests) — la comparación solo tiene sentido junto a un `selectedRegion` (Serie A), así que se descarta junto con él, junto con la granularidad, o al elegir una región primaria nueva.

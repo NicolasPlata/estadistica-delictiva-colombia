@@ -105,3 +105,10 @@ Igual que en el backend (ver `docs/plans/02-plan-desarrollo-backend.md`), la ló
     *   Asegurar *Code Splitting*.
     *   Comprobar que el mapa renderice por encima de 60 FPS y el estado inicial se vea en pantalla en menos de 2 segundos.
     *   Añadir loaders dinámicos atractivos durante las consultas a la API.
+
+**Estado: Fase 5 completa — Frontend 100% terminado.**
+
+- **Hito 5.1 ya estaba satisfecho de facto**, sin trabajo nuevo: desde la Fase 2 cada control de filtro llama `setFilters` directamente al cambiar (se tomó la alternativa "actualización en tiempo real" que el plan ya permitía, en vez de un botón "Aplicar Filtros"), y cada consumidor (`MapCanvas`, `KpisPanel`, `EvolutionPanel`) se suscribe a `filters` con un selector Zustand acotado — cada uno refresca de forma independiente sin re-renders cruzados.
+- **Hito 5.2 — code splitting real:** `MapCanvas`/`KpisPanel`/`EvolutionPanel` pasados a `React.lazy`, cada uno en su propio `<Suspense>` (para que los paneles de Recharts, más livianos, no esperen al chunk de MapLibre). El bundle crítico inicial bajó de 630KB a 190KB (185KB→60KB gzip); `maplibre-gl` (~970KB) y Recharts cargan en paralelo después del primer pintado, no antes.
+- **Loaders:** esqueletos `animate-pulse` (mismas dimensiones que el panel real, sin salto de layout) para KPIs/evolución mientras cargan datos; spinner para el chunk del mapa mientras carga código.
+- **Medido contra un build de producción real (`vite preview`), no el dev server** — la métrica que importa es la de producción: shell (Header+Sidebar) visible en 108ms, mapa montado en 954ms (ambos muy por debajo del presupuesto de 2s de RNF-01); FPS del mapa 60.0 en reposo / 60.3 paneando, con la granularidad más pesada (1.122 municipios) — ni con WebGL por software (Chromium headless) se pierden frames.

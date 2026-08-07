@@ -34,6 +34,20 @@ function formatTooltipValue(value: unknown) {
   return Number(Array.isArray(value) ? value[0] : value).toLocaleString("es-CO");
 }
 
+/** Loader (Hito 5.2) — mismas dimensiones que el panel real. */
+function EvolutionPanelSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Cargando evolución"
+      className="absolute bottom-4 left-4 right-4 h-64 rounded-lg border border-border bg-surface-panel/80 backdrop-blur-md p-4 shadow-lg animate-pulse"
+    >
+      <div className="h-2.5 w-40 rounded bg-surface-card-hover mb-4" />
+      <div className="h-40 rounded bg-surface-card-hover" />
+    </div>
+  );
+}
+
 /** Panel de evolución (HU-3.02/HU-3.03/HU-3.04): línea mensual nacional
  * por defecto, barras anuales al aislar un territorio, y comparación
  * Serie A/B superpuesta en el mismo gráfico (nunca dos gráficos
@@ -93,7 +107,7 @@ export function EvolutionPanel() {
     };
   }, [filters, comparisonMode, selectedRegion, comparisonRegion, comparisonPeriodo, granularidad]);
 
-  if (!evolution) return null;
+  if (!evolution) return <EvolutionPanelSkeleton />;
 
   const comparando = comparisonMode !== "off" && comparisonEvolution !== null;
   const titulo = selectedRegion
