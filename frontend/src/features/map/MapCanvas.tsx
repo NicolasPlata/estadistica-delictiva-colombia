@@ -8,6 +8,7 @@ import { BasemapSwitcher } from "./BasemapSwitcher";
 import { BASEMAP_SOURCES } from "./basemapSources";
 import { buildChoroplethExpression, computeQuantileBreaks } from "./choropleth";
 import { toFeatureStateEntries } from "./featureState";
+import { MapLegend } from "./MapLegend";
 import { type HoveredRegion, MapTooltip } from "./MapTooltip";
 import {
   readAccentColor,
@@ -341,6 +342,7 @@ export function MapCanvas() {
         )}
       </Map>
       <BasemapSwitcher />
+      <MapLegend />
       <MapTooltip region={hovered} />
       <p className="absolute bottom-1 right-1 text-[10px] leading-none text-text-secondary bg-surface-panel/70 px-1.5 py-0.5 rounded">
         {source.attribution} | MapLibre

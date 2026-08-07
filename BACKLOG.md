@@ -7,7 +7,7 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 ---
 
 ## 🔴 Decisiones pendientes del usuario
-_(vacío — Fase 7 completa, ver "Hecho")_
+_(vacío — Fases 6, 7 y 8 completas, ver "Hecho". `04-plan-desarrollo-funcionalidades-v2.md` cerrado.)_
 
 _(Resuelto 2026-08-07: orden de implementación entre fases — el usuario pidió empezar "en orden", así que se ejecuta Fase 6 → Fase 7 → Fase 8 tal como quedaron numeradas en el plan, no el orden alternativo "8 primero" que el documento sugería como opción más rápida.)_
 
@@ -16,13 +16,21 @@ _(Resuelto 2026-08-07: taxonomía de 8 categorías padre de delitos — el usuar
 _(Resuelto 2026-08-07: nombre del endpoint de desglose — se usó `/api/v1/stats/breakdown` tal como se propuso en el plan, sin objeción.)_
 
 ## 🔵 Próximo (en orden)
-- [ ] Fase 8 (leyenda del mapa) — sin iniciar, único punto restante de `04-plan-desarrollo-funcionalidades-v2.md`.
+- [ ] `docs/plans/04-plan-desarrollo-funcionalidades-v2.md` está **completo** (Fases 6, 7 y 8) — no queda ningún ítem de ese plan pendiente. Falta la Fase 5 (Despliegue e Integración Final, `antigravity.md`), que sigue siendo el único punto de la hoja de ruta general sin empezar.
 - [ ] Deuda de Figma (no bloqueante): agregar filas para la paleta categórica de 8 colores (Reconciliación 6) a la tabla "Roles Semánticos" de Foundations (`4:5`) — se crearon las Variables pero no se documentaron ahí, a diferencia de las reconciliaciones anteriores.
 - [ ] Deuda de Figma (no bloqueante): el panel de desglose (`78:689`) es un componente standalone, no está compuesto dentro de ningún Flow Screen existente (ej. como overlay en Región Seleccionada `25:249`).
 - [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica") — único punto abierto conocido del alcance ya completado; el resto del plan de frontend (`docs/plans/03-plan-desarrollo-frontend.md`) está completo.
 - [ ] Deuda de diseño descubierta en Fase 6 (no bloqueante): el sidebar "Filtros Globales" en Figma (`23:8`/`24:326`) está desincronizado del código real — muestra Departamento/Municipio como dropdowns y un botón "Aplicar Filtros" que no existen en `Sidebar.tsx` (la región se elige haciendo clic en el mapa, y los filtros aplican en vivo). Documentado en la memoria de Figma para no asumir que el mockup sigue siendo fiel.
 
 ## ✅ Hecho
+
+**2026-08-07 — Fase 8 completa: Leyenda del Mapa (última fase de `04-plan-desarrollo-funcionalidades-v2.md`)**
+- **Figma (Hito 8.1):** el componente "Map Legend" (`17:74`) ya existía y ya estaba colocado en los 6 Flow Screens relevantes (5 desktop + Mobile) — **corrección a la documentación de esta misma sesión**, que había afirmado erróneamente lo contrario basándose en evidencia incompleta (una tabla que solo trackeaba instancias de Basemap Switcher). Verificado con `findAllWithCriteria` contra el archivo real antes de tocar nada, evitando crear instancias duplicadas.
+- Encontrado y corregido: el gradiente vivía en una colección de Variables separada (`Choropleth Ramp`) que **no** se actualizó cuando se invirtió la rampa en código (commit `d316557`, mismo día) — quedó desincronizada silenciosamente. Se corrigieron los 5 valores `dark/step-N` para que coincidan con `tokens.css`.
+- Labels cambiados de "Mínimo"/"Máximo" a "Menor"/"Mayor" (un primer intento con etiquetas más largas se superpuso — el frame no era auto-layout) y se agregó una línea explícita nueva **"Más oscuro = más peligroso"**, pedido literal del usuario. Como las 6 instancias ya existían, el fix del componente maestro se propagó automáticamente a todas — confirmado con capturas de 2 instancias distintas (`20:164` y Mobile) sin tocarlas una por una.
+- **Frontend (Hito 8.2):** nuevo `features/map/MapLegend.tsx` — a diferencia de `MapCanvas` (que necesita `readDesignTokens.ts` para resolver colores a hex para las expresiones de MapLibre), este es HTML/CSS plano y usa `var(--choropleth-N)` directamente, así que seguir el tema activo es gratis. Título dinámico según `metrica` ("Densidad Delictiva" / "Tasa x100k hab.", Fase 6). Montado en `MapCanvas` junto a `BasemapSwitcher`/`MapTooltip`, en el lateral izquierdo, en el hueco entre `KpisPanel` (arriba) y `EvolutionPanel` (abajo, ancho completo) que quedó identificado en el plan original.
+- Verificado con capturas Playwright contra el stack real, en ambos temas y ambas métricas (Cantidad/Tasa) — confirmado que el título cambia y que la dirección del degradado coincide con los colores reales del choropleth en el mapa. 83/83 tests en verde (sin tests nuevos — es cableado visual estático, sin lógica de negocio propia).
+- Con esto, **`docs/plans/04-plan-desarrollo-funcionalidades-v2.md` queda completo** — las 3 funcionalidades pedidas por el usuario (tasa per cápita, desglose de delitos, leyenda del mapa) están implementadas, verificadas con datos reales y documentadas.
 
 **2026-08-07 — Fase 7 completa: Desglose de Delitos por Región (Tabla + Pastel)**
 - **Taxonomía (Hito 7.1):** las 8 categorías padre aprobadas por el usuario se materializaron en `backend/src/domain/delito_categoria.rs` (mapeo estático `match`, no una tabla nueva — mismo precedente que la homologación de RN-03). **Auditoría real hecha antes de confiar en la transcripción manual:** un test de integración nuevo (`every_real_delito_maps_to_a_known_categoria_not_otros`) consulta los 47 delitos distintos reales de `estadistica_delictiva` y confirma que cada uno mapea a una categoría conocida — pasó a la primera, sin errores de transcripción.
@@ -54,7 +62,7 @@ _(Resuelto 2026-08-07: nombre del endpoint de desglose — se usó `/api/v1/stat
   - `Data/Población/Población.xlsx` (DANE PPED): la hoja útil es `PobMunicipalxÁrea` (84.225 filas, `codigo_dane`/`año`/`área geográfica`/`total`), cobertura 2018-2042 con **1.123 municipios** — un desfase de 1 contra los 1.122 de `municipios_geo`/geometría actual, que hay que reconciliar (mismo tipo de auditoría que la migración 0001).
   - El endpoint de desglose por delito puede reutilizar exactamente el patrón ya existente de `distribucion_genero` en `postgres_stats_repository.rs` (`GROUP BY` sobre `estadistica_rollup`), agrupando por `delitos` en vez de `genero` — bajo riesgo de performance por precedente ya medido.
   - RN-04 (`reglas-negocio.md`) ya anticipaba la necesidad de agrupar delitos bajo categorías padre — se armó una propuesta borrador de 8 categorías contra los 47 delitos homologados reales de la base (consultados directamente vía `psql`), marcada como decisión pendiente del usuario, no asumida.
-  - El componente "Map Legend" (Figma, nodo `17:74`) **ya existe pero nunca se implementó en el frontend ni se colocó en ningún Flow Screen** — y su gradiente actual quedó desactualizado por la inversión de la rampa de esta misma sesión (commit `d316557`), así que la Fase 8 no es "diseñar desde cero" sino corregir y conectar algo que ya estaba a medio camino.
+  - El componente "Map Legend" (Figma, nodo `17:74`) **ya existe pero nunca se implementó en el frontend** — y su gradiente actual quedó desactualizado por la inversión de la rampa de esta misma sesión (commit `d316557`), así que la Fase 8 no es "diseñar desde cero" sino corregir y conectar algo que ya estaba a medio camino. *(Corrección, ver Hito 8.1 en "Hecho" más abajo: sí estaba colocado en los Flow Screens — la afirmación de que "nunca se colocó" fue un error, basado en evidencia incompleta al escribir el plan.)*
   - Layout actual del mapa (`App.tsx`): KPI arriba, Evolución abajo (ancho completo), Basemap Switcher arriba-derecha — el desglose por delito (Fase 7) no tiene dónde encajar salvo un panel/drawer lateral derecho, y la leyenda (Fase 8) encaja en la franja media del lateral izquierdo, que hasta ahora está vacía.
 - 3 decisiones quedaron explícitamente pendientes del usuario (ver sección de arriba), no resueltas unilateralmente.
 
