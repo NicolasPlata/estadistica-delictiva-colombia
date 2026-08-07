@@ -1,19 +1,19 @@
 # Frontend — Estadística Delictiva Colombia
 
-React (Vite + TypeScript) + Zustand + Tailwind CSS v4 + MapLibre GL JS (llega en Fase 3). **Fase 1 (Setup e Infraestructura Base) completa** — ver [`docs/plans/03-plan-desarrollo-frontend.md`](../docs/plans/03-plan-desarrollo-frontend.md) para el roadmap y [`BACKLOG.md`](../BACKLOG.md) para el estado granular.
+React (Vite + TypeScript) + Zustand + Tailwind CSS v4 + MapLibre GL JS (llega en Fase 3). **Fase 2 (Layout Principal y Componentes de Filtro) completa** — ver [`docs/plans/03-plan-desarrollo-frontend.md`](../docs/plans/03-plan-desarrollo-frontend.md) para el roadmap y [`BACKLOG.md`](../BACKLOG.md) para el estado granular.
 
 ```
 src/
-  app/                  # shell raíz — monta data-theme en <html> en sync con el store (RNF-04, HU-1.05)
+  app/                  # shell raíz (Header + Sidebar + Main Area) — monta data-theme en <html> en sync con el store (RNF-04, HU-1.05)
   features/
     map/                 # (Fase 3) canvas MapLibre, basemap switcher, choropleth, tooltip
-    filters/              # (Fase 2) sidebar y su slice de estado
+    filters/              # Sidebar + 6 componentes de filtro, cableados a GlobalFilters y a /metadata/filtros
     kpis/                 # (Fase 4) tarjetas KPI, donut de género
     evolution/            # (Fase 4) gráfico de líneas/barras, comparación (HU-3.04)
   shared/
-    api/                  # types.ts — tipos que reflejan docs/architecture/02-api-contracts.md
+    api/                  # client.ts (fetch wrapper), metadata.ts, types.ts — reflejan docs/architecture/02-api-contracts.md
     design-system/        # tokens.css — variables CSS + @theme de Tailwind, fuente: docs/design/00-design-system.md
-    store/                 # useAppStore.ts (Zustand) — tema, mapa base, GlobalFilters
+    store/                 # useAppStore.ts (Zustand) — tema, mapa base, granularidad, GlobalFilters, vocabulario
 ```
 
 ## Tokens de diseño

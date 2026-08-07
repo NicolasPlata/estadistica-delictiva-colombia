@@ -10,9 +10,19 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] Frontend — Fase 2 (`docs/plans/03-plan-desarrollo-frontend.md`): Layout principal (Sidebar + Main Area) y componentes base de filtros.
+- [ ] Frontend — Fase 3 (`docs/plans/03-plan-desarrollo-frontend.md`): Motor Geográfico y Cartografía — integración de MapLibre GL JS, basemap switcher (HU-1.05) y choropleth.
 
 ## ✅ Hecho
+
+**2026-08-06 — Frontend Fase 2: Layout Principal y Componentes de Filtro (Hito 2.1 y 2.2) — TDD**
+- `shared/api/client.ts` (`apiFetch`, `ApiError`) y `shared/api/metadata.ts` (`fetchFiltrosVocabulario`), ambos test-first contra `fetch` mockeado.
+- `useAppStore` extendido con `granularidad`/`setGranularidad` y `vocabulario`/`vocabularioStatus`/`loadVocabulario` (estado async con `idle`/`loading`/`ready`/`error`), TDD'd con `vi.mock` sobre `api/metadata` — 18 tests.
+- `features/filters/toggleSelection.ts`: función pura extraída y testeada primero (3 tests) para el patrón "agregar si falta, quitar si está, `undefined` si queda vacío" — reutilizada por `DelitosMultiSelect`.
+- 6 componentes de filtro (`GranularidadToggle`, `YearRangeSelect`, `DelitosMultiSelect`, `GeneroSegmentedControl`, `GrupoEdadSelect`, `ArmaMedioSelect`) + `Sidebar.tsx` que los compone y dispara `loadVocabulario()` al montar; `Header.tsx` + `ThemeToggle.tsx`; `App.tsx` recompuesto (Header + Sidebar + Main Area placeholder, el mapa llega en Fase 3).
+- **Bug real encontrado en el propio desarrollo (TDD del comportamiento, no solo del markup):** los selectores `useAppStore((s) => s.filters.delitos ?? [])` (y los mismos para `vocabulario?.delitos`/`grupos_edad`/`armas_medios`) devolvían un array nuevo en cada render — rompe el cache de snapshot de Zustand y produce un bucle infinito (`Maximum update depth exceeded`), detectado porque hizo fallar los 3 tests de `App.test.tsx` al integrar `Sidebar`. Corregido con constantes `EMPTY: string[] = []` estables a nivel de módulo. `Sidebar.test.tsx` deja un test de regresión explícito para esta clase de bug.
+- **Verificación visual real con Playwright** (Chrome extension no disponible en este entorno; el primer intento con `google-chrome --headless --screenshot` producía un artefacto de color falso en botones de segmented control — descartado tras confirmar con `getComputedStyle` que los valores reales eran correctos en ambos temas). Capturas confirmadas: Dark (default) y Light, layout completo, sin regresiones del ajuste de tema previo.
+- `ApiError` refactorizado para no usar parameter properties (`erasableSyntaxOnly` de TS 6 las rechaza) — encontrado por `tsc -b`, no relacionado con el trabajo de este hito pero bloqueaba una verificación limpia.
+- 23/23 tests en verde, `tsc -b` y `oxlint` limpios.
 
 **2026-08-06 — Frontend Fase 1: Setup e Infraestructura Base (Hito 1.1 y 1.2) — TDD**
 - `npm create vite@latest` (React + TypeScript) dentro de `frontend/`, estructura por *features* (`app/`, `features/{map,filters,kpis,evolution}`, `shared/{api,design-system,store}`) en vez de las típicas carpetas por tipo de archivo.

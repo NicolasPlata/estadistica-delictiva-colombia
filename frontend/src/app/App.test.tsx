@@ -1,8 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import { act } from "react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAppStore } from "../shared/store/useAppStore";
 import { App } from "./App";
+
+vi.mock("../shared/api/metadata", () => ({
+  fetchFiltrosVocabulario: vi.fn().mockResolvedValue({
+    delitos: [],
+    armas_medios: [],
+    generos: [],
+    grupos_edad: [],
+  }),
+}));
 
 describe("App", () => {
   beforeEach(() => {
