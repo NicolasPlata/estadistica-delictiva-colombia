@@ -54,18 +54,18 @@ Regla estructural (para que no se repita el problema): en **cada** tema, `accent
 
 | Paso (baja→alta densidad) | Claro | Oscuro |
 |---|---|---|
-| 1 (mínimo) | `#e59595` | `#7a3b45` |
-| 2 | `#d97070` | `#a34450` |
+| 1 (mínimo) | `#e59595` | `#ff8a80` |
+| 2 | `#d97070` | `#e37070` |
 | 3 | `#cc4d4d` | `#c85c5c` |
-| 4 | `#a81717` | `#e37070` |
-| 5 (máximo) | `#701010` | `#ff8a80` |
+| 4 | `#a81717` | `#a34450` |
+| 5 (máximo) | `#701010` | `#7a3b45` |
 
-*Nota de dirección:* en claro, el paso 1 (mínimo) es el más **claro** y se acerca al fondo; en oscuro, el paso 1 (mínimo) es el más **oscuro** y se acerca al fondo — es el mismo "extremo recede hacia la superficie" en ambos casos, solo que la superficie está en polos opuestos de luminosidad (así lo exige la guía de dataviz: "sequential... flips anchor in dark").
+*Nota de dirección (revisada 2026-08-07):* pedido explícito del usuario — "más oscuro = más peligroso" debe leerse igual en ambos temas, no relativo a la superficie. El paso 5 (máximo) es el color más **oscuro** en los dos modos; el paso 1 (mínimo) es el más **claro**. Esto reemplaza la regla original ("el extremo recede hacia la superficie, en polos opuestos de luminosidad según el tema") — la rampa de oscuro se invirtió (mismos 5 tonos, orden de pasos invertido) para lograrlo. La rampa de claro no cambió: ya cumplía la regla nueva de casualidad, sin necesidad de tocarla.
 
-*Validación (ambas pasan los 4 checks):*
+*Validación:* los 5 tonos por tema son los mismos que ya pasaban `validate_palette.js --ordinal` (L monotónica, ΔL ≥ 0.06, un solo tono) — invertir el orden de asignación a los pasos no cambia el set de colores ni su ΔL entre pasos consecutivos, así que ambos siguen pasando. El único check que sí cambia de extremo es "contraste ≥ 2:1 contra la superficie en el paso más cercano a cero": en oscuro ese paso ahora es `#ff8a80` (antes `#7a3b45`), con *más* contraste contra `#0b1326`, no menos — el check sigue pasando con margen mayor.
 ```
 node validate_palette.js "#e59595,#d97070,#cc4d4d,#a81717,#701010" --ordinal --mode light --surface "#f8f9ff"
-node validate_palette.js "#7a3b45,#a34450,#c85c5c,#e37070,#ff8a80" --ordinal --mode dark --surface "#0b1326"
+node validate_palette.js "#ff8a80,#e37070,#c85c5c,#a34450,#7a3b45" --ordinal --mode dark --surface "#0b1326"
 ```
 
 **Sin datos (HU-1.02):** municipios/departamentos sin registros en el filtro actual se pintan con `border` a 40% de opacidad sobre `surface-canvas` (no un color de la rampa) — nunca un color de la rampa en el extremo bajo, que sí representa "densidad mínima *reportada*", una categoría distinta de "sin dato".

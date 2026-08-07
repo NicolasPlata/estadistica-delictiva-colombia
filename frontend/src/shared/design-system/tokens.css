@@ -29,12 +29,14 @@
   --accent-subtle: #8ed5ff;
   --accent-subtle-on: #00354a;
 
-  /* Rampa del choropleth — secuencial, un solo tono (Reconciliación 3) */
-  --choropleth-1: #7a3b45;
-  --choropleth-2: #a34450;
+  /* Rampa del choropleth — secuencial, un solo tono (Reconciliación 3,
+     invertida 2026-08-07: "más oscuro = más peligroso" en ambos temas,
+     ver nota de dirección más abajo en el doc del sistema de diseño). */
+  --choropleth-1: #ff8a80;
+  --choropleth-2: #e37070;
   --choropleth-3: #c85c5c;
-  --choropleth-4: #e37070;
-  --choropleth-5: #ff8a80;
+  --choropleth-4: #a34450;
+  --choropleth-5: #7a3b45;
 
   /* Paleta de estado — fija, NO varía por tema (Hallazgo adicional) */
   --status-good: #0ca30c;

@@ -14,6 +14,14 @@ _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## ✅ Hecho
 
+**2026-08-07 — Rampa del choropleth invertida: "más oscuro = más peligroso" (Reconciliación 3)**
+- Pedido del usuario: la dirección de la rampa debía leerse de forma absoluta ("entre más oscuro, más peligroso"), no relativa a la superficie de cada tema.
+- Diagnóstico: el tema claro ya cumplía la regla (paso 5/máximo = `#701010`, el más oscuro); el tema oscuro estaba invertido por diseño original (paso 5/máximo = `#ff8a80`, el más claro/brillante — principio de "el extremo recede hacia la superficie" documentado en la Reconciliación 3 original, que priorizaba que el valor más alto "resaltara" sobre el fondo oscuro).
+- Fix: se invirtió el orden de asignación de los 5 tonos ya validados de la rampa oscura en `tokens.css` (mismos hex, pasos 1↔5 y 2↔4 intercambiados) — no fue necesario tocar `choropleth.ts`/`readDesignTokens.ts`, que ya leen los tokens de forma genérica por posición. Tema claro sin cambios.
+- Verificado que la inversión no rompe ningún check de `validate_palette.js` ya documentado: mismo set de 5 colores (ΔL monotónica intacta), y el contraste del paso 1 (mínimo) contra la superficie oscura *aumenta* (2.24:1 → 8.10:1, calculado con la fórmula de luminancia relativa WCAG), no lo reduce.
+- Verificado visualmente con capturas de Playwright contra el frontend real (`localhost:5173`, backend+Postgres corriendo) en ambos temas: los departamentos de mayor criminalidad (Antioquia, Cundinamarca/Bogotá) se pintan en el tono más oscuro; los de menor criminalidad, en el salmón más claro — consistente en claro y oscuro.
+- `docs/design/00-design-system.md` (Reconciliación 3) actualizado con la nueva tabla de pasos y la nota de dirección revisada. 70/70 tests en verde (sin tests nuevos — es un cambio de tokens CSS, sin lógica nueva que cubrir).
+
 **2026-08-07 — Eliminado el sub-modo "Por Periodo" de la comparación paralela (HU-3.04)**
 - Pedido del usuario: comparar dos rangos de años de la misma región no se usa en la práctica — el caso de uso real siempre compara el mismo periodo entre dos territorios distintos ("Por Región", que se conserva).
 - `useAppStore`: `ComparisonMode` pasa de `"off" | "region" | "periodo"` a `"off" | "region"`; se eliminan `comparisonPeriodo`, `setComparisonPeriodo` y el tipo `PeriodoRange`.
