@@ -21,6 +21,16 @@ vi.mock("../shared/api/mapStats", () => ({
   fetchMapStats: vi.fn().mockResolvedValue({ granularidad: "DEPARTAMENTO", data: {} }),
 }));
 
+vi.mock("../shared/api/kpis", () => ({
+  fetchKpis: vi.fn().mockResolvedValue({
+    total_delitos: 0,
+    variacion_porcentual: 0,
+    delito_mas_comun: null,
+    mes_mayor_impacto: null,
+    distribucion_genero: {},
+  }),
+}));
+
 describe("App", () => {
   beforeEach(() => {
     useAppStore.setState(useAppStore.getInitialState());

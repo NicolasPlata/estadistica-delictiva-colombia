@@ -10,9 +10,18 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] Frontend — Fase 4 (`docs/plans/03-plan-desarrollo-frontend.md`): Dashboarding — tarjetas de KPIs, donut de género, gráfico de evolución regional, comparación paralela (HU-3.04).
+- [ ] Frontend — Fase 4, Hito 4.2 (`docs/plans/03-plan-desarrollo-frontend.md`): gráfico de evolución regional al hacer clic en un territorio del mapa (HU-3.03), línea nacional por defecto (HU-3.02).
+- [ ] Frontend — Fase 4, Hito 4.3: comparación paralela por región/periodo (HU-3.04, RF-09).
 
 ## ✅ Hecho
+
+**2026-08-06 — Frontend Fase 4, Hito 4.1: Panel de KPIs y Donut de Género (HU-3.01) — TDD**
+- `shared/api/kpis.ts` (`fetchKpis`, TDD): a diferencia de `/map/stats`, el body de `POST /api/v1/stats/kpi` es `GlobalFilters` directamente, sin envolver.
+- `features/kpis/formatKpis.ts` (TDD, 9 tests): `formatVariacion` mapea el signo a tono semántico (aumento = `critical`, reutiliza la paleta de estado — más delitos es mala noticia; disminución = `good`); `formatMesMayorImpacto` traduce `"YYYY-MM"` a nombre de mes en español sin depender de `Intl`/datos ICU del runtime; `buildGeneroDonutData` itera en un orden fijo propio (no el de `Object.entries`) para que el color categórico siga siempre a la misma entidad.
+- **Gap real de diseño encontrado y cerrado:** el donut de género necesitaba una paleta categórica de 3 colores, pero los slots 1-2 de la paleta default del skill de dataviz ya estaban reservados para `comparacion-serie-a/b` (HU-3.04) y el slot 8 (rojo) ya tiene significado cargado en la app (choropleth, `status-critical`). Se probaron combinaciones con `validate_palette.js --pairs all` (un donut es un contexto "todos contra todos", no solo adyacente) contra las superficies reales de ambos temas hasta encontrar una que pasara limpio: slots 4/6/7 (amarillo/verde/violeta). Documentado como Reconciliación 5 en `00-design-system.md`, tokens `genero-masculino/femenino/no-reportado` en `tokens.css`.
+- `KpisPanel.tsx`: panel flotante glassmorphism (esquina superior izquierda, simétrico al `BasemapSwitcher`) con total, variación, delito más común, mes de mayor impacto y el donut (Recharts) con leyenda propia (nunca la leyenda default de Recharts, que colorea el texto — viola la regla del skill de "el texto lleva tokens de texto, nunca el color de la serie").
+- Verificado con datos reales (backend local): 4.836.275 delitos totales sin filtro (coincide exactamente con el conteo pre-rollup de la migración), +100.0% (convención documentada de "sin periodo anterior"), donut y panel correctos en ambos temas.
+- 47/47 tests en verde, `tsc -b` y `oxlint` limpios.
 
 **2026-08-06 — Frontend Fase 3: Motor Geográfico y Cartografía (Hito 3.1 y 3.2)**
 - `MapCanvas.tsx`: `react-map-gl`/`maplibre-gl` con las 3 fuentes raster (OSM/Satelital/Oscuro), geometría cacheada por granularidad en `useAppStore` (`loadGeometry`, fetch-once, mismo patrón que `loadVocabulario` — 3 tests nuevos), estadísticas aplicadas vía `feature-state` sin reconstruir la fuente (ADR 0002). `BasemapSwitcher.tsx` (control flotante glassmorphism, HU-1.05) y `MapTooltip.tsx` (HU-1.03).

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Sidebar } from "../features/filters/Sidebar";
+import { KpisPanel } from "../features/kpis/KpisPanel";
 import { MapCanvas } from "../features/map/MapCanvas";
 import { useAppStore } from "../shared/store/useAppStore";
 import { Header } from "./Header";
@@ -24,6 +25,7 @@ export function App() {
         <Sidebar />
         <main className="flex-1 relative">
           <MapCanvas />
+          <KpisPanel />
         </main>
       </div>
     </div>

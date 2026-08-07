@@ -45,6 +45,11 @@
   /* Comparación (Reconciliación 4, HU-3.04) — reservados, no reusar */
   --comparacion-serie-a: #3987e5;
   --comparacion-serie-b: #d95926;
+
+  /* Donut de género (Reconciliación 5, HU-3.01) — reservados, no reusar */
+  --genero-masculino: #008300;
+  --genero-femenino: #9085e9;
+  --genero-no-reportado: #c98500;
 }
 
 :root[data-theme="light"] {
@@ -72,6 +77,10 @@
 
   --comparacion-serie-a: #2a78d6;
   --comparacion-serie-b: #eb6834;
+
+  --genero-masculino: #008300;
+  --genero-femenino: #4a3aa7;
+  --genero-no-reportado: #eda100;
 }
 
 @theme {
@@ -104,6 +113,10 @@
 
   --color-comparacion-serie-a: var(--comparacion-serie-a);
   --color-comparacion-serie-b: var(--comparacion-serie-b);
+
+  --color-genero-masculino: var(--genero-masculino);
+  --color-genero-femenino: var(--genero-femenino);
+  --color-genero-no-reportado: var(--genero-no-reportado);
 
   /* Tipografía — escala canónica única (no varía por tema, solo el color) */
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;

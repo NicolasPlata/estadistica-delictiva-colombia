@@ -100,5 +100,23 @@ Se usan los slots 1 (azul) y 2 (naranja) de la paleta categórica default del sk
 
 ---
 
+## ✅ Reconciliación 5 — Paleta categórica para distribución de género (HU-3.01)
+
+**Problema:** el donut de género del panel de KPIs necesita 3 colores de identidad (Masculino/Femenino/No reportado) — es otro caso categórico, pero no puede reutilizar los slots 1-2 (`comparacion-serie-a/b`, reservados exclusivamente para HU-3.04) ni la familia roja (ya cargada de significado en esta app: rampa del choropleth y `status-critical`).
+
+Se probaron combinaciones de 3 slots de la paleta categórica default del skill que evitan 1, 2 y la familia roja (slot 8), validadas con `--pairs all` (un donut muestra todas las porciones a la vez, así que aplica el gate "todos contra todos", no solo adyacente) contra las superficies reales de ambos temas. Los slots 4/6/7 (amarillo/verde/violeta) son los que pasan limpio en los dos modos:
+
+| Rol | Claro | Oscuro |
+|---|---|---|
+| `genero-masculino` (slot 6, verde) | `#008300` | `#008300` |
+| `genero-femenino` (slot 7, violeta) | `#4a3aa7` | `#9085e9` |
+| `genero-no-reportado` (slot 4, amarillo) | `#eda100` | `#c98500` |
+
+*Validación (`--pairs all --mode <light\|dark> --surface <superficie real>`):* separación CVD peor-caso ΔE 6.9-16.2 (banda 6-8 en oscuro, legal con codificación secundaria — el donut siempre lleva leyenda + etiquetas directas, nunca depende solo del color), piso de visión normal ΔE 15.6-30.3 (por encima del piso de 15), contraste ≥3:1 en oscuro (en claro el amarillo queda en 2.06:1 — alivio ya cubierto por las etiquetas del donut).
+
+**Regla de uso:** reservados para distribución de género en el panel de KPIs — no se combinan en el mismo gráfico con `comparacion-serie-a/b` (no ocurre en la app: son paneles distintos) ni se reutiliza el slot 8 (rojo) para evitar confundirse con el significado ya establecido de "densidad alta"/"crítico".
+
+---
+
 ## Tipografía, Radios y Espaciado
 Sin conflicto entre temas — se usan tal cual del frontmatter de cada archivo (`typography`, `rounded`, `spacing`). Único punto de atención: `DESIGN-dark.md` y `DESIGN-light.md` tienen escalas tipográficas ligeramente distintas (ej. dark trae `display-lg`/`headline-lg-mobile`/`code-sm`; light trae `headline-sm`/`data-mono` en su lugar). Al construir el mapeo a Tailwind, unificar el **nombre** de cada escala (`headline-sm`, etc.) entre ambos temas aunque el `fontSize`/`lineHeight` no cambie con el tema — la tipografía no debería variar por tema, solo el color.
