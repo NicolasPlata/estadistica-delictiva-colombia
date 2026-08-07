@@ -14,6 +14,11 @@ _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## ✅ Hecho
 
+**2026-08-06 — Documentación: guía de comandos de desarrollo local**
+- Nuevo `docs/desarrollo-local.md`: prerrequisitos (versiones probadas de Rust/Node/Postgres), configuración inicial de `.env`, secuencia completa de base de datos desde cero (ETL → migraciones correctivas 0001/0002, en orden), comandos de backend/frontend, cómo levantar el stack completo (dev y contra el build de producción), y una tabla de referencia rápida.
+- Enlazado desde `README.md` (sección nueva "Desarrollo local"), `antigravity.md` (item 15 del índice de documentación) y desde `backend/README.md`/`frontend/README.md` (cada uno mantiene su propio bloque de comandos rápidos, apuntando a la guía completa para el panorama de base de datos + stack conjunto).
+- De paso: `README.md` "Estado" actualizado — decía "el backend y el frontend están arrancando", desactualizado desde que ambos se completaron (Fases 3-5).
+
 **2026-08-06 — Frontend Fase 5: Integración Total y Optimización — Frontend completo**
 - **Hito 5.1 (Reactividad):** ya satisfecho de facto desde la Fase 2 — cada filtro llama a `setFilters` directamente al cambiar (sin botón "Aplicar Filtros", la alternativa explícita que el plan permitía), y `MapCanvas`/`KpisPanel`/`EvolutionPanel` se suscriben a `filters` con selectores Zustand acotados (`useAppStore((s) => s.filters)`), por lo que cada uno refresca de forma independiente y eficiente sin re-renders cruzados. No hubo trabajo nuevo que hacer, solo confirmarlo.
 - **Hito 5.2 (TTV):** `MapCanvas`/`KpisPanel`/`EvolutionPanel` pasados a `React.lazy` + `Suspense` (cada uno en su propio boundary, para que los paneles livianos de Recharts no esperen al chunk de MapLibre) — el bundle crítico inicial bajó de 630KB a 190KB (185KB→60KB gzip); `maplibre-gl` (~970KB) y Recharts ahora cargan en paralelo tras el primer pintado, no antes. `chunkSizeWarningLimit` ajustado con nota explicando por qué (tamaño real e inevitable de una librería de mapas WebGL completa, ya aislada en su propio chunk).

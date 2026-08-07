@@ -33,6 +33,15 @@ Este proyecto no solo implementa un dashboard — documenta el razonamiento detr
 
 `Data/` (los Excel crudos, ~300MB) no se versiona — ver `docs/plans/01-plan-estandarizacion-migracion.md` para el origen de los datos (Policía Nacional de Colombia, datos abiertos) y cómo regenerarlos.
 
+## Desarrollo local
+
+Guía completa (prerrequisitos, base de datos, backend, frontend) en [`docs/desarrollo-local.md`](docs/desarrollo-local.md). Con todo ya configurado, el día a día es:
+
+```bash
+cd backend && cargo run      # http://localhost:3000
+cd frontend && npm run dev   # http://localhost:5173
+```
+
 ## Documentación
 
 Todo el conocimiento del producto vive en `docs/` y se indexa desde [`antigravity.md`](antigravity.md), el punto de entrada obligatorio del proyecto (para humanos y para cualquier agente de IA que lo retome):
@@ -44,7 +53,7 @@ Todo el conocimiento del producto vive en `docs/` y se indexa desde [`antigravit
 
 ## Estado
 
-En desarrollo activo. ETL, base de datos y diseño están completos; el backend en Rust y el frontend en React están arrancando — ver el tracker en [`antigravity.md`](antigravity.md).
+Backend y frontend completos de punta a punta (ver el tracker en [`antigravity.md`](antigravity.md) y el detalle granular en [`BACKLOG.md`](BACKLOG.md)). Queda pendiente el despliegue final.
 
 ## Licencia
 

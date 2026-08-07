@@ -28,3 +28,5 @@ cp ../.env.example ../.env   # si no existe ya — completar credenciales reales
 cargo test                    # 78 tests, deben pasar en verde (requiere Postgres corriendo)
 cargo run                     # sirve en http://localhost:3000 (precalienta caché de geometría al arrancar, ~10-15s)
 ```
+
+Guía completa (base de datos desde cero, stack completo) en [`docs/desarrollo-local.md`](../docs/desarrollo-local.md).

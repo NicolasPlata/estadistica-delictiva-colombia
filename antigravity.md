@@ -49,6 +49,9 @@ Toda la lógica profunda del proyecto ha sido extraída a la carpeta `docs/`. **
 ### 📌 Seguimiento Operativo
 14. **[Backlog](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/BACKLOG.md):** qué se hizo, qué sigue, decisiones pendientes y deuda técnica — se actualiza con cada hito. El tracker de la Sección 4 abajo es solo el resumen ejecutivo; el Backlog es la fuente viva.
 
+### 🧰 Guía de Desarrollo Local
+15. **[Comandos de Desarrollo](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/desarrollo-local.md):** cómo levantar el proyecto completo desde cero (prerrequisitos, base de datos, backend, frontend) y los comandos del día a día — leer esto antes de intentar correr nada localmente.
+
 *(Nota: Los scripts usados para la limpieza inicial de los Excel y migración están en la carpeta `scripts/`)*.
 
 ---

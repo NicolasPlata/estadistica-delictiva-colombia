@@ -34,3 +34,5 @@ npm install
 npm test        # Vitest, debe pasar en verde
 npm run dev      # http://localhost:5173
 ```
+
+Guía completa (backend + base de datos + stack completo) en [`docs/desarrollo-local.md`](../docs/desarrollo-local.md).
