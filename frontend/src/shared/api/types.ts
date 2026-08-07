@@ -29,7 +29,10 @@ export interface FiltrosVocabulario {
 /** Respuesta de POST /api/v1/stats/kpi — §2.1 */
 export interface Kpis {
   total_delitos: number;
-  variacion_porcentual: number;
+  /** `null` cuando el periodo anterior a comparar cae fuera del rango
+   * real del dataset (2020-2025) — ej. "todos los años" o solo el primer
+   * año — no cuando el cambio es 0% (eso sigue siendo un número). */
+  variacion_porcentual: number | null;
   delito_mas_comun: string | null;
   mes_mayor_impacto: string | null;
   distribucion_genero: Record<string, number>;

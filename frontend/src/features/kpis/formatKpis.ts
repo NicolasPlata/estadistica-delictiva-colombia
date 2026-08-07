@@ -6,11 +6,16 @@ export interface VariacionFormateada {
 }
 
 /** Más delitos que el periodo anterior es una mala noticia (tone
- * `critical`, reutiliza la paleta de estado) — menos es `good`. La
- * convención de +100% cuando no hay periodo anterior con datos (ver
- * `docs/plans/02-...` Hito 3.1) se formatea igual que cualquier aumento,
- * a propósito: sigue siendo un aumento desde la perspectiva del usuario. */
-export function formatVariacion(pct: number): VariacionFormateada {
+ * `critical`, reutiliza la paleta de estado) — menos es `good`.
+ * `pct === null` (corrección 2026-08-07, reportado por el usuario): el
+ * backend ya no inventa un +100% cuando el "periodo anterior" cae fuera
+ * del rango real del dataset (ej. "todos los años" o solo el primer año)
+ * — no hay nada real que comparar, así que se muestra un mensaje neutral
+ * en vez de una cifra que parecería una comparación real. */
+export function formatVariacion(pct: number | null): VariacionFormateada {
+  if (pct === null) {
+    return { text: "Sin periodo anterior para comparar", tone: "neutral" };
+  }
   const sign = pct > 0 ? "+" : "";
   const tone = pct > 0 ? "critical" : pct < 0 ? "good" : "neutral";
   return { text: `${sign}${pct.toFixed(1)}%`, tone };

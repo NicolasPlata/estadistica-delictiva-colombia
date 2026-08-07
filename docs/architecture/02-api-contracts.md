@@ -37,7 +37,7 @@ Todas las peticiones (a excepción de las capas vectoriales estáticas puras) ac
 ```json
 {
   "total_delitos": 450210,
-  "variacion_porcentual": 5.4,      // % comparado con el periodo inmediato anterior
+  "variacion_porcentual": 5.4,      // % comparado con el periodo inmediato anterior, o null (ver nota)
   "delito_mas_comun": "HURTO A PERSONAS",
   "mes_mayor_impacto": "2023-07",   // (HU-3.01) Periodo YYYY-MM con mayor `cantidad` agregada dentro del rango filtrado
   "distribucion_genero": {
@@ -48,6 +48,8 @@ Todas las peticiones (a excepción de las capas vectoriales estáticas puras) ac
 }
 ```
 *Nota: `mes_mayor_impacto` faltaba en versiones anteriores de este contrato pese a ser un criterio explícito de HU-3.01 ("el mes de mayor impacto") — se agrega aquí antes de iniciar el Hito 3.1 del backend.*
+
+*Nota (corrección 2026-08-07): `variacion_porcentual` es `null` cuando el "periodo inmediato anterior" (mismo largo que el rango filtrado, desplazado hacia atrás) cae total o parcialmente fuera del rango real del dataset (RN-06, 2020-2025) — ej. al filtrar "todos los años" (sin acotar) o solo el primer año (2020), donde el periodo anterior calculado no tiene ningún dato real que comparar. Antes de esta corrección se reportaba `+100.0%` en ese caso (misma convención que "aparece desde cero"), lo cual era engañoso: no es que el periodo anterior haya tenido cero delitos, es que ese periodo no existe dentro del dataset. El frontend debe tratar `null` como "sin comparación disponible", no como 0% ni como un error.*
 
 ### 2.2 Obtener Evolución Temporal (Gráfico de Barras/Líneas)
 **Ruta:** `POST /api/v1/stats/evolution`  

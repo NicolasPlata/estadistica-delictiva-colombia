@@ -14,8 +14,15 @@ describe("formatVariacion", () => {
     expect(formatVariacion(0)).toEqual({ text: "0.0%", tone: "neutral" });
   });
 
-  it("keeps the documented +100% convention (sin datos en el periodo anterior) as critical", () => {
+  it("keeps the documented +100% convention (sin datos en el periodo anterior, pero el periodo existe) as critical", () => {
     expect(formatVariacion(100)).toEqual({ text: "+100.0%", tone: "critical" });
+  });
+
+  it("shows a neutral message instead of a number when there is no comparable previous period", () => {
+    expect(formatVariacion(null)).toEqual({
+      text: "Sin periodo anterior para comparar",
+      tone: "neutral",
+    });
   });
 });
 

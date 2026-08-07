@@ -76,7 +76,8 @@ export function KpisPanel() {
           {kpis.total_delitos.toLocaleString("es-CO")}
         </span>
         <span className={`text-body-sm ${TONE_CLASSES[variacion.tone]}`}>
-          {variacion.text} vs. periodo anterior
+          {variacion.text}
+          {kpis.variacion_porcentual !== null && " vs. periodo anterior"}
         </span>
       </div>
 

@@ -233,6 +233,57 @@ mod tests {
         assert_eq!(response.status(), axum::http::StatusCode::OK);
     }
 
+    /// Reportado por el usuario (2026-08-07): "todos los años" (o solo el
+    /// primer año del dataset) mostraba "+100.0% vs. periodo anterior" sin
+    /// sentido — no hay ningún periodo anterior real dentro del dataset
+    /// (2020-2025, RN-06) con el que comparar. Confirma contra datos
+    /// reales que el backend ahora reporta `null`, no `100.0`.
+    #[tokio::test]
+    async fn kpi_endpoint_variacion_porcentual_is_null_for_todos_los_anios() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/stats/kpi")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from("{}"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(json["variacion_porcentual"].is_null());
+    }
+
+    #[tokio::test]
+    async fn kpi_endpoint_variacion_porcentual_is_null_for_the_first_year_of_the_dataset() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/stats/kpi")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({ "anio_inicio": 2020, "anio_fin": 2020 }).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+
+        assert!(json["variacion_porcentual"].is_null());
+    }
+
     /// Test de integración: `POST /api/v1/stats/evolution` con agrupación
     /// ANUAL sobre Bogotá, confirmando la forma exacta del contrato
     /// (`02-api-contracts.md` §2.2) — `region_label` resuelto por nombre,

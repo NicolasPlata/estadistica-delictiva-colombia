@@ -15,8 +15,18 @@ pub async fn execute<R: StatsRepository>(
     let anterior = periodo_anterior(filters);
 
     let total_delitos = repo.total_delitos(filters).await?;
-    let total_anterior = repo.total_delitos(&anterior).await?;
-    let variacion_porcentual = calcular_variacion_porcentual(total_delitos, total_anterior);
+    // Si el periodo anterior cae fuera del rango real del dataset (RN-06)
+    // no hay nada que consultar ni comparar — pedirlo igual devolvería 0
+    // por ausencia de filas, indistinguible de "hubo un periodo real con
+    // cero delitos", que es exactamente la ambigüedad que se quiere evitar
+    // (reportado por el usuario, 2026-08-07: "todos los años" o solo el
+    // primer año mostraban +100% sin sentido).
+    let variacion_porcentual = if periodo_anterior_existe_en_dataset(&anterior) {
+        let total_anterior = repo.total_delitos(&anterior).await?;
+        Some(calcular_variacion_porcentual(total_delitos, total_anterior))
+    } else {
+        None
+    };
 
     let delito_mas_comun = repo.delito_mas_comun(filters).await?;
     let mes_mayor_impacto = repo.mes_mayor_impacto(filters).await?;
@@ -56,6 +66,14 @@ fn periodo_anterior(filters: &GlobalFilters) -> GlobalFilters {
         anio_fin: Some(anio_inicio - 1),
         ..filters.clone()
     }
+}
+
+/// `false` cuando el "periodo anterior" calculado termina antes del primer
+/// año con datos reales (`ANIO_MIN`, RN-06) — el dataset simplemente no
+/// llega tan atrás, así que no existe ningún periodo real que comparar
+/// (distinto de "existe el periodo, pero tuvo cero delitos").
+fn periodo_anterior_existe_en_dataset(anterior: &GlobalFilters) -> bool {
+    anterior.anio_fin.is_some_and(|fin| fin >= ANIO_MIN)
 }
 
 #[cfg(test)]
@@ -134,6 +152,27 @@ mod tests {
         let anterior = periodo_anterior(&filters);
 
         assert_eq!(anterior.genero, Some("FEMENINO".to_string()));
+    }
+
+    // ── periodo_anterior_existe_en_dataset ──────────────────────────────
+
+    #[test]
+    fn periodo_anterior_no_existe_cuando_termina_antes_de_anio_min() {
+        // "Todos los años" (sin acotar) o solo el primer año del dataset
+        // (2020) desplazan el periodo anterior a 2019 o antes — el dataset
+        // no llega tan atrás (RN-06).
+        let filters = GlobalFilters::default();
+        let anterior = periodo_anterior(&filters);
+
+        assert!(!periodo_anterior_existe_en_dataset(&anterior));
+    }
+
+    #[test]
+    fn periodo_anterior_existe_cuando_el_rango_previo_esta_dentro_del_dataset() {
+        let filters = GlobalFilters { anio_inicio: Some(2023), anio_fin: Some(2025), ..Default::default() };
+        let anterior = periodo_anterior(&filters);
+
+        assert!(periodo_anterior_existe_en_dataset(&anterior));
     }
 
     // ── execute (con repositorio falso) ─────────────────────────────────
@@ -229,9 +268,45 @@ mod tests {
         let kpis = execute(&repo, &filters).await.unwrap();
 
         assert_eq!(kpis.total_delitos, 150);
-        assert_eq!(kpis.variacion_porcentual, 50.0);
+        assert_eq!(kpis.variacion_porcentual, Some(50.0));
         assert_eq!(kpis.delito_mas_comun, Some("HURTO A PERSONAS".to_string()));
         assert_eq!(kpis.mes_mayor_impacto, Some("2023-07".to_string()));
         assert_eq!(kpis.distribucion_genero.get("MASCULINO"), Some(&100));
+    }
+
+    #[tokio::test]
+    async fn execute_returns_none_variacion_when_filtering_all_years() {
+        // Reportado por el usuario (2026-08-07): filtrar "todos los años"
+        // (sin acotar) mostraba "+100.0% vs. periodo anterior", engañoso —
+        // el periodo anterior calculado (2014-2019) no existe en el
+        // dataset (RN-06, empieza en 2020), así que no hay nada real que
+        // comparar.
+        let repo = FakeStatsRepository {
+            total_por_rango: |inicio, _fin| match inicio {
+                None => 4_836_275, // periodo actual: todo el dataset, sin acotar
+                Some(2014) => panic!("no debería consultarse un periodo fuera del dataset"),
+                _ => panic!("rango inesperado: {inicio:?}"),
+            },
+        };
+
+        let kpis = execute(&repo, &GlobalFilters::default()).await.unwrap();
+
+        assert_eq!(kpis.variacion_porcentual, None);
+    }
+
+    #[tokio::test]
+    async fn execute_returns_none_variacion_when_filtering_only_the_first_year() {
+        let repo = FakeStatsRepository {
+            total_por_rango: |inicio, _fin| match inicio {
+                Some(2020) => 800_000, // periodo actual: solo 2020
+                Some(2019) => panic!("no debería consultarse un periodo fuera del dataset"),
+                _ => panic!("rango inesperado: {inicio:?}"),
+            },
+        };
+        let filters = GlobalFilters { anio_inicio: Some(2020), anio_fin: Some(2020), ..Default::default() };
+
+        let kpis = execute(&repo, &filters).await.unwrap();
+
+        assert_eq!(kpis.variacion_porcentual, None);
     }
 }
