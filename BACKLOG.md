@@ -10,9 +10,19 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] Frontend — Fase 3 (`docs/plans/03-plan-desarrollo-frontend.md`): Motor Geográfico y Cartografía — integración de MapLibre GL JS, basemap switcher (HU-1.05) y choropleth.
+- [ ] Frontend — Fase 4 (`docs/plans/03-plan-desarrollo-frontend.md`): Dashboarding — tarjetas de KPIs, donut de género, gráfico de evolución regional, comparación paralela (HU-3.04).
 
 ## ✅ Hecho
+
+**2026-08-06 — Frontend Fase 3: Motor Geográfico y Cartografía (Hito 3.1 y 3.2)**
+- `MapCanvas.tsx`: `react-map-gl`/`maplibre-gl` con las 3 fuentes raster (OSM/Satelital/Oscuro), geometría cacheada por granularidad en `useAppStore` (`loadGeometry`, fetch-once, mismo patrón que `loadVocabulario` — 3 tests nuevos), estadísticas aplicadas vía `feature-state` sin reconstruir la fuente (ADR 0002). `BasemapSwitcher.tsx` (control flotante glassmorphism, HU-1.05) y `MapTooltip.tsx` (HU-1.03).
+- `features/map/choropleth.ts` (TDD, 6 tests): clasificación por cuantiles (`computeQuantileBreaks`, nearest-rank) sobre el rango de valores del filtro activo, mapeada a los 5 pasos fijos de la rampa de `00-design-system.md` vía una expresión `case`/`step` de MapLibre (`buildChoroplethExpression`) — necesario porque un umbral fijo no tendría sentido dado que el rango cambia radicalmente según el filtro.
+- **3 bugs reales encontrados con verificación end-to-end (Playwright + backend real), ninguno visible en la suite de tests (jsdom no soporta WebGL) ni en `tsc`/`oxlint`:**
+  1. El pre-bundling de esbuild de Vite rompe el Web Worker que `maplibre-gl` usa para tilizar GeoJSON — las fuentes se quedaban sin cargar *para siempre*, sin error visible. Fix: `optimizeDeps.exclude: ['maplibre-gl']`.
+  2. `map.setFeatureState` fijado antes de que el source termine de tilizar se pierde silenciosamente al reemplazarse el tile provisional por el real; y un `useRef` leído dentro de un efecto resultaba "stale" porque react-map-gl crea la instancia de MapLibre en un efecto interno posterior al primer render. Fix: sondeo de `isSourceLoaded` vía `requestAnimationFrame` + guardar el mapa en `useState` (no en un ref) para que su llegada dispare un re-render real.
+  3. **Violación real de HU-1.05:** cambiar de mapa base reconstruía el `mapStyle` completo (`setStyle`), lo que MapLibre trata como "recargar el estilo" — destruía la capa de choropleth en cada cambio de basemap/tema, justo lo que la HU prohíbe. Fix: `mapStyle` estático + `RasterTileSource.setTiles()` imperativo; atribución (RNF-09) renderizada como texto propio en vez de depender del `AttributionControl` de MapLibre.
+- Verificado con datos reales (backend local contra Postgres, no mocks): ambos temas, las 3 fuentes base, ambas granularidades, tooltip mostrando el valor exacto de `POST /api/v1/map/stats` (Tolima, 145.376 delitos, coincide con la respuesta cruda de la API).
+- 37/37 tests en verde, `tsc -b` y `oxlint` limpios (2 warnings de `exhaustive-deps` suprimidos explícitamente y documentados — dependencia real pero indirecta vía `getComputedStyle`, invisible para el linter).
 
 **2026-08-06 — Frontend Fase 2: Layout Principal y Componentes de Filtro (Hito 2.1 y 2.2) — TDD**
 - `shared/api/client.ts` (`apiFetch`, `ApiError`) y `shared/api/metadata.ts` (`fetchFiltrosVocabulario`), ambos test-first contra `fetch` mockeado.
@@ -127,6 +137,7 @@ _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 **Fases previas (ver `antigravity.md` para el detalle):** ETL de los Excel crudos (2020-2025), diseño documental completo (arquitectura, ADRs, requerimientos, historias de usuario, reglas de negocio).
 
 ## ⚠️ Deuda técnica / limitaciones conocidas
+- **Sidebar sin colapsar en móvil:** Hito 2.1 pedía un sidebar colapsable en pantallas pequeñas (responsividad); la Fase 2 se cerró sin esa pieza — el layout actual asume escritorio. Pendiente antes de considerar el frontend "responsive".
 - **Figma:** `Segmented Control` (Granularidad, Género) y `Nav Item` son `FRAME` sueltos, no `COMPONENT_SET` — componentizar si se necesitan más variantes o reutilización.
 - **Basemaps gratuitos (OSM, Esri):** políticas de "bajo volumen" de los proveedores — no aptos para tráfico de producción real sin autohospedar tiles o migrar a un proveedor pago.
 - **`Data/` no versionado:** si se pierde la carpeta local, hay que re-obtener los Excel crudos (fuente: datos abiertos de la Policía Nacional de Colombia) y re-ejecutar el ETL + la migración correctiva (no está fusionada en `migracion_db.py`/`migracion_shape.py` todavía).

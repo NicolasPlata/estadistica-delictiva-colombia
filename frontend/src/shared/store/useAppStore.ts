@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { fetchGeometry, type RegionFeatureCollection } from "../api/geometry";
 import { fetchFiltrosVocabulario } from "../api/metadata";
 import type {
   Basemap,
@@ -10,6 +11,7 @@ import type {
 import { defaultBasemapForTheme } from "./theme";
 
 type VocabularioStatus = "idle" | "loading" | "ready" | "error";
+type GeometryStatus = "loading" | "ready" | "error";
 
 interface AppState {
   theme: Theme;
@@ -33,9 +35,16 @@ interface AppState {
    * en `"error"` para que la UI lo maneje, en vez de tumbar el árbol de
    * React con una promesa no capturada. */
   loadVocabulario: () => Promise<void>;
+  /** Geometría cacheada por granularidad — se pide una sola vez por sesión
+   * (ADR 0002, HU-1.01/1.04): es estática, no depende de `GlobalFilters`,
+   * y alternar Departamento/Municipio nunca debe volver a pedirla si ya
+   * está en caché. */
+  geometryCache: Partial<Record<Granularidad, RegionFeatureCollection>>;
+  geometryStatus: Partial<Record<Granularidad, GeometryStatus>>;
+  loadGeometry: (granularidad: Granularidad) => Promise<void>;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   // RNF-04: Dark es el default incondicional.
   theme: "dark",
   basemap: defaultBasemapForTheme("dark"),
@@ -43,6 +52,8 @@ export const useAppStore = create<AppState>((set) => ({
   granularidad: "DEPARTAMENTO",
   vocabulario: null,
   vocabularioStatus: "idle",
+  geometryCache: {},
+  geometryStatus: {},
 
   setTheme: (theme) =>
     set({ theme, basemap: defaultBasemapForTheme(theme) }),
@@ -61,6 +72,28 @@ export const useAppStore = create<AppState>((set) => ({
       set({ vocabulario, vocabularioStatus: "ready" });
     } catch {
       set({ vocabulario: null, vocabularioStatus: "error" });
+    }
+  },
+
+  loadGeometry: async (granularidad) => {
+    const { geometryStatus } = get();
+    if (geometryStatus[granularidad] === "loading" || geometryStatus[granularidad] === "ready") {
+      return;
+    }
+
+    set((state) => ({
+      geometryStatus: { ...state.geometryStatus, [granularidad]: "loading" },
+    }));
+    try {
+      const geometry = await fetchGeometry(granularidad);
+      set((state) => ({
+        geometryCache: { ...state.geometryCache, [granularidad]: geometry },
+        geometryStatus: { ...state.geometryStatus, [granularidad]: "ready" },
+      }));
+    } catch {
+      set((state) => ({
+        geometryStatus: { ...state.geometryStatus, [granularidad]: "error" },
+      }));
     }
   },
 }));

@@ -13,6 +13,14 @@ vi.mock("../shared/api/metadata", () => ({
   }),
 }));
 
+vi.mock("../shared/api/geometry", () => ({
+  fetchGeometry: vi.fn().mockResolvedValue({ type: "FeatureCollection", features: [] }),
+}));
+
+vi.mock("../shared/api/mapStats", () => ({
+  fetchMapStats: vi.fn().mockResolvedValue({ granularidad: "DEPARTAMENTO", data: {} }),
+}));
+
 describe("App", () => {
   beforeEach(() => {
     useAppStore.setState(useAppStore.getInitialState());

@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { RegionFeatureCollection } from "../api/geometry";
 import type { FiltrosVocabulario } from "../api/types";
 import { useAppStore } from "./useAppStore";
 
 vi.mock("../api/metadata", () => ({
   fetchFiltrosVocabulario: vi.fn(),
+}));
+
+vi.mock("../api/geometry", () => ({
+  fetchGeometry: vi.fn(),
 }));
 
 describe("useAppStore", () => {
@@ -98,5 +103,45 @@ describe("useAppStore", () => {
 
     expect(useAppStore.getState().vocabularioStatus).toBe("error");
     expect(useAppStore.getState().vocabulario).toBeNull();
+  });
+
+  it("defaults geometry status to 'idle' for every granularidad", () => {
+    const state = useAppStore.getState();
+
+    expect(state.geometryStatus).toEqual({});
+    expect(state.geometryCache).toEqual({});
+  });
+
+  it("loadGeometry fetches and caches the geometry keyed by granularidad", async () => {
+    const { fetchGeometry } = await import("../api/geometry");
+    const geojson: RegionFeatureCollection = { type: "FeatureCollection", features: [] };
+    vi.mocked(fetchGeometry).mockResolvedValue(geojson);
+
+    await useAppStore.getState().loadGeometry("DEPARTAMENTO");
+
+    expect(useAppStore.getState().geometryStatus.DEPARTAMENTO).toBe("ready");
+    expect(useAppStore.getState().geometryCache.DEPARTAMENTO).toEqual(geojson);
+    expect(fetchGeometry).toHaveBeenCalledWith("DEPARTAMENTO");
+  });
+
+  it("loadGeometry does not re-fetch a granularidad that is already cached (ADR 0002: una sola vez por sesión)", async () => {
+    const { fetchGeometry } = await import("../api/geometry");
+    const geojson: RegionFeatureCollection = { type: "FeatureCollection", features: [] };
+    vi.mocked(fetchGeometry).mockResolvedValue(geojson);
+
+    await useAppStore.getState().loadGeometry("MUNICIPIO");
+    await useAppStore.getState().loadGeometry("MUNICIPIO");
+
+    expect(fetchGeometry).toHaveBeenCalledTimes(1);
+  });
+
+  it("loadGeometry sets status to 'error' for that granularidad when the request fails", async () => {
+    const { fetchGeometry } = await import("../api/geometry");
+    vi.mocked(fetchGeometry).mockRejectedValue(new Error("boom"));
+
+    await expect(useAppStore.getState().loadGeometry("MUNICIPIO")).resolves.toBeUndefined();
+
+    expect(useAppStore.getState().geometryStatus.MUNICIPIO).toBe("error");
+    expect(useAppStore.getState().geometryCache.MUNICIPIO).toBeUndefined();
   });
 });
