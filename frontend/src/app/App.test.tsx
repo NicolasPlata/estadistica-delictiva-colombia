@@ -60,6 +60,6 @@ describe("App", () => {
   it("renders the app title", () => {
     render(<App />);
 
-    expect(screen.getByText("Criterium Analytics")).toBeInTheDocument();
+    expect(screen.getByText("Estadística Delictiva - Colombia")).toBeInTheDocument();
   });
 });
