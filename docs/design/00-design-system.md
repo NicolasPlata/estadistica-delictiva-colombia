@@ -2,8 +2,8 @@
 
 Este documento indexa las especificaciones visuales del proyecto y define, de forma vinculante, cómo el frontend (Fase 2 y 4 de `03-plan-desarrollo-frontend.md`) debe consumirlas antes de construir mockups o componentes.
 
-*   **[DESIGN-dark.md](./DESIGN-dark.md):** Export original del tema oscuro ("Criterium Analytics Dark"). Tema **por defecto**, alineado con RNF-04.
-*   **[DESIGN-light.md](./DESIGN-light.md):** Export original del tema claro ("Criterium Analytics").
+*   **[DESIGN-dark.md](./DESIGN-dark.md):** Export original del tema oscuro ("Criterium Analytics Dark").
+*   **[DESIGN-light.md](./DESIGN-light.md):** Export original del tema claro ("Criterium Analytics"). Tema **por defecto** (RNF-04, revisado 2026-08-07 — antes era Dark).
 
 Ambos archivos se conservan **sin modificar** como material de referencia (probablemente exports de una herramienta de diseño). La sección de "Reconciliación" de este documento es la que manda a la hora de implementar: donde la prosa de esos dos archivos entra en conflicto con su propio frontmatter, o entre sí, **este documento resuelve el conflicto y su tabla de tokens es la fuente de verdad**.
 

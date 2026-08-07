@@ -41,20 +41,20 @@ describe("App", () => {
     document.documentElement.removeAttribute("data-theme");
   });
 
-  it("mounts data-theme=dark on <html> by default (RNF-04)", () => {
+  it("mounts data-theme=light on <html> by default (RNF-04)", () => {
     render(<App />);
 
-    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.dataset.theme).toBe("light");
   });
 
   it("updates data-theme when the store's theme changes", () => {
     render(<App />);
 
     act(() => {
-      useAppStore.getState().setTheme("light");
+      useAppStore.getState().setTheme("dark");
     });
 
-    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.theme).toBe("dark");
   });
 
   it("renders the app title", () => {

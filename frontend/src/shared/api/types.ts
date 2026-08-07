@@ -86,7 +86,8 @@ export interface Breakdown {
   por_categoria: CategoriaCantidad[];
 }
 
-/** Tema de la aplicación (RNF-04: Dark es el default). */
+/** Tema de la aplicación (RNF-04: Light es el default — revisado
+ * 2026-08-07, antes era Dark). */
 export type Theme = "dark" | "light";
 
 /** Mapa base (RF-10, HU-1.05). */

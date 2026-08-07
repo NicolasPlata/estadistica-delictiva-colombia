@@ -73,9 +73,12 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  // RNF-04: Dark es el default incondicional.
-  theme: "dark",
-  basemap: defaultBasemapForTheme("dark"),
+  // RNF-04 (revisado 2026-08-07, pedido explícito del usuario): Light es
+  // el default incondicional — antes era Dark. No detectado por
+  // prefers-color-scheme, igual que antes: el usuario elige explícitamente
+  // si quiere el otro tema.
+  theme: "light",
+  basemap: defaultBasemapForTheme("light"),
   filters: {},
   granularidad: "DEPARTAMENTO",
   // Default a Tasa (no Cantidad): pedido explícito del usuario (2026-08-07)

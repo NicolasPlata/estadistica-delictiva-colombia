@@ -33,7 +33,7 @@ El sistema es un **Dashboard Interactivo de Estadística Delictiva** enfocado en
 *   **RNF-03:** Las respuestas de los endpoints analíticos de la API no deben exceder los 300 ms en promedio bajo condiciones normales.
 
 ### Experiencia de Usuario e Interfaz (UX/UI)
-*   **RNF-04:** La aplicación debe exhibir un diseño vanguardista y "premium", con efectos de desenfoque (Glassmorphism) y animaciones fluidas (Microinteracciones). Debe soportar tema oscuro (Dark Mode, por defecto) y tema claro (Light Mode), ambos conmutables por el usuario, según los tokens definidos en [`docs/design/00-design-system.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/design/00-design-system.md).
+*   **RNF-04:** La aplicación debe exhibir un diseño vanguardista y "premium", con efectos de desenfoque (Glassmorphism) y animaciones fluidas (Microinteracciones). Debe soportar tema claro (Light Mode, por defecto) y tema oscuro (Dark Mode), ambos conmutables por el usuario, según los tokens definidos en [`docs/design/00-design-system.md`](file:///home/nicolas/Personal_Projects/New%20Estadistica%20Delictiva/docs/design/00-design-system.md). *(Revisado 2026-08-07, pedido explícito del usuario: el default cambió de Dark a Light.)*
 *   **RNF-05:** El diseño debe ser responsivo, adaptándose fluidamente desde resoluciones de escritorio hasta dispositivos móviles.
 
 ### Arquitectura e Infraestructura

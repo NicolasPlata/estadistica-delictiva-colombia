@@ -3,81 +3,22 @@
  * (tabla de roles reconciliada) + DESIGN-dark.md (escala canónica de
  * tipografía/spacing/radios, ver nota de unificación en 00-design-system.md).
  *
- * Dark es el default INCONDICIONAL (RNF-04: "Dark Mode, por defecto"), no
- * detectado por prefers-color-scheme — el usuario debe elegir Light
- * explícitamente (HU-1.05 liga el tema al mapa base, así que el default de
- * tema no puede depender del SO sin romper esa lógica).
+ * Light es el default INCONDICIONAL (RNF-04, revisado 2026-08-07 — antes
+ * era Dark), no detectado por prefers-color-scheme — el usuario debe
+ * elegir Dark explícitamente (HU-1.05 liga el tema al mapa base, así que
+ * el default de tema no puede depender del SO sin romper esa lógica).
  */
 
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
-
-  /* Roles semánticos — Dark (Reconciliación 1/2 de 00-design-system.md) */
-  --surface-canvas: #0b1326;
-  --surface-panel: #131b2e;
-  --surface-panel-on: #dae2fd;
-  --surface-card: #222a3d;
-  --surface-card-hover: #2d3449;
-  --text-primary: #dae2fd;
-  --text-secondary: #bdc8d1;
-  --border: #3e484f;
-  --error: #ffb4ab;
-  --accent-interactive: #38bdf8;
-  --accent-interactive-on: #004965;
-  --accent-subtle: #8ed5ff;
-  --accent-subtle-on: #00354a;
-
-  /* Rampa del choropleth — secuencial, un solo tono (Reconciliación 3,
-     invertida 2026-08-07: "más oscuro = más peligroso" en ambos temas,
-     ver nota de dirección más abajo en el doc del sistema de diseño). */
-  --choropleth-1: #ff8a80;
-  --choropleth-2: #e37070;
-  --choropleth-3: #c85c5c;
-  --choropleth-4: #a34450;
-  --choropleth-5: #7a3b45;
-
-  /* Paleta de estado — fija, NO varía por tema (Hallazgo adicional) */
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-serious: #ec835a;
-  --status-critical: #d03b3b;
-
-  /* Comparación (Reconciliación 4, HU-3.04) — reservados, no reusar */
-  --comparacion-serie-a: #3987e5;
-  --comparacion-serie-b: #d95926;
-
-  /* Donut de género (Reconciliación 5, HU-3.01) — reservados, no reusar */
-  --genero-masculino: #008300;
-  --genero-femenino: #9085e9;
-  --genero-no-reportado: #c98500;
-
-  /* Paleta categórica del desglose de delitos (Reconciliación 6, Fase 7)
-     — 8 categorías padre (RN-04), reservada para el pastel/tabla del
-     panel de desglose por región. No validada con validate_palette.js
-     (no disponible en este entorno) — validada a mano con la misma
-     fórmula de luminancia relativa WCAG ya usada en este archivo,
-     ≥4.5:1 contra el fondo oscuro. */
-  --categoria-vida-integridad: #e6497f;
-  --categoria-delitos-sexuales: #8a63f0;
-  --categoria-violencia-intrafamiliar: #c2703a;
-  --categoria-patrimonio-economico: #e8a33d;
-  --categoria-secuestro: #22b8cf;
-  --categoria-extorsion: #94d82d;
-  --categoria-terrorismo: #868e96;
-  --categoria-amenazas: #5c7cfa;
-
-  /* Límite departamental en el mapa (Hallazgo adicional, HU-1.04) — un
-     único tono fijo, no una paleta de datos, así que no compite con
-     ningún rol reservado (choropleth=rojo, selección=azul, comparación,
-     género, estado). Teal: única familia de tono sin usar en la app. */
-  --limite-departamental: #0d9488;
-}
-
-:root[data-theme="light"] {
   color-scheme: light;
 
+  /* Roles semánticos — Light (Reconciliación 1/2 de 00-design-system.md).
+     `:root` es ahora la base porque Light es el default incondicional
+     (RNF-04, revisado 2026-08-07) — Dark vive en el override de abajo.
+     Antes era al revés; el swap importa para evitar un flash del tema
+     equivocado antes de que el efecto de React aplique `data-theme`. */
   --surface-canvas: #f8f9ff;
   --surface-panel: #eff4ff;
   --surface-panel-on: #0b1c30;
@@ -92,19 +33,36 @@
   --accent-subtle: #0058be;
   --accent-subtle-on: #ffffff;
 
+  /* Rampa del choropleth — secuencial, un solo tono (Reconciliación 3;
+     dirección invertida 2026-08-07: "más oscuro = más peligroso" en
+     ambos temas, ver nota de dirección más abajo en el doc del sistema
+     de diseño). */
   --choropleth-1: #e59595;
   --choropleth-2: #d97070;
   --choropleth-3: #cc4d4d;
   --choropleth-4: #a81717;
   --choropleth-5: #701010;
 
+  /* Paleta de estado — fija, NO varía por tema (Hallazgo adicional) */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  /* Comparación (Reconciliación 4, HU-3.04) — reservados, no reusar */
   --comparacion-serie-a: #2a78d6;
   --comparacion-serie-b: #eb6834;
 
+  /* Donut de género (Reconciliación 5, HU-3.01) — reservados, no reusar */
   --genero-masculino: #008300;
   --genero-femenino: #4a3aa7;
   --genero-no-reportado: #eda100;
 
+  /* Paleta categórica del desglose de delitos (Reconciliación 6, Fase 7)
+     — 8 categorías padre (RN-04), reservada para el pastel/tabla del
+     panel de desglose por región. No validada con validate_palette.js
+     (no disponible en este entorno) — validada a mano con la misma
+     fórmula de luminancia relativa WCAG ya usada en este archivo. */
   --categoria-vida-integridad: #c2255c;
   --categoria-delitos-sexuales: #6741d9;
   --categoria-violencia-intrafamiliar: #9c4a1f;
@@ -114,7 +72,53 @@
   --categoria-terrorismo: #5c636b;
   --categoria-amenazas: #3b5bdb;
 
+  /* Límite departamental en el mapa (Hallazgo adicional, HU-1.04) — un
+     único tono fijo, no una paleta de datos, así que no compite con
+     ningún rol reservado (choropleth=rojo, selección=azul, comparación,
+     género, estado). Teal: única familia de tono sin usar en la app. */
   --limite-departamental: #047857;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-canvas: #0b1326;
+  --surface-panel: #131b2e;
+  --surface-panel-on: #dae2fd;
+  --surface-card: #222a3d;
+  --surface-card-hover: #2d3449;
+  --text-primary: #dae2fd;
+  --text-secondary: #bdc8d1;
+  --border: #3e484f;
+  --error: #ffb4ab;
+  --accent-interactive: #38bdf8;
+  --accent-interactive-on: #004965;
+  --accent-subtle: #8ed5ff;
+  --accent-subtle-on: #00354a;
+
+  --choropleth-1: #ff8a80;
+  --choropleth-2: #e37070;
+  --choropleth-3: #c85c5c;
+  --choropleth-4: #a34450;
+  --choropleth-5: #7a3b45;
+
+  --comparacion-serie-a: #3987e5;
+  --comparacion-serie-b: #d95926;
+
+  --genero-masculino: #008300;
+  --genero-femenino: #9085e9;
+  --genero-no-reportado: #c98500;
+
+  --categoria-vida-integridad: #e6497f;
+  --categoria-delitos-sexuales: #8a63f0;
+  --categoria-violencia-intrafamiliar: #c2703a;
+  --categoria-patrimonio-economico: #e8a33d;
+  --categoria-secuestro: #22b8cf;
+  --categoria-extorsion: #94d82d;
+  --categoria-terrorismo: #868e96;
+  --categoria-amenazas: #5c7cfa;
+
+  --limite-departamental: #0d9488;
 }
 
 @theme {

@@ -17,11 +17,11 @@ describe("useAppStore", () => {
     vi.clearAllMocks();
   });
 
-  it("defaults to dark theme (RNF-04) and its matching basemap", () => {
+  it("defaults to light theme (RNF-04) and its matching basemap", () => {
     const state = useAppStore.getState();
 
-    expect(state.theme).toBe("dark");
-    expect(state.basemap).toBe("oscuro");
+    expect(state.theme).toBe("light");
+    expect(state.basemap).toBe("osm");
   });
 
   it("defaults filters to an empty (unfiltered) GlobalFilters", () => {
