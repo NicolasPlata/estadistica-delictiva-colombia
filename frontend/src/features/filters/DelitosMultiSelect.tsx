@@ -52,13 +52,19 @@ export function DelitosMultiSelect() {
       </div>
 
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        // Apilados de ancho completo, sin truncar (mismo patrón que
+        // "Multiselect Chip-Input" en Figma, `17:45`) — los nombres de
+        // delito son largos ("ARTICULO 219 A. UTILIZACION O FACILITACION
+        // DE MEDIOS DE COMUNICACION...") y truncarlos con "..." dentro de
+        // una píldora angosta (versión anterior) ocultaba justo la
+        // información que el usuario necesita para saber qué seleccionó.
+        <div className="flex flex-col gap-1.5">
           {selected.map((delito) => (
             <span
               key={delito}
-              className="flex items-center gap-1 bg-accent-interactive text-accent-interactive-on text-label-md normal-case px-2 py-0.5 rounded-full"
+              className="flex items-center justify-between gap-2 bg-accent-interactive text-accent-interactive-on text-label-md normal-case px-2 py-1 rounded-md"
             >
-              <span className="max-w-32 truncate">{delito}</span>
+              <span>{delito}</span>
               <button
                 type="button"
                 onClick={() => toggle(delito)}
