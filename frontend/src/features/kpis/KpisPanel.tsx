@@ -69,8 +69,13 @@ export function KpisPanel() {
   const donutData = buildGeneroDonutData(kpis.distribucion_genero);
 
   return (
-    <div className="absolute top-4 left-4 flex items-center gap-4 rounded-lg border border-border bg-surface-panel/80 backdrop-blur-md px-4 py-3 shadow-lg">
-      <div className="flex flex-col gap-0.5">
+    // `right-4 md:right-auto` + `overflow-x-auto`: en escritorio el ancho
+    // es el intrínseco del contenido (como siempre). En móvil el panel no
+    // cabe completo en 375px — en vez de encimarse con el resto de la
+    // pantalla, se acota al viewport y se puede desplazar horizontalmente
+    // (cada sección con `shrink-0` para que no se aplasten entre sí).
+    <div className="absolute top-4 left-4 right-4 md:right-auto flex items-center gap-4 rounded-lg border border-border bg-surface-panel/80 backdrop-blur-md px-4 py-3 shadow-lg overflow-x-auto">
+      <div className="flex flex-col gap-0.5 shrink-0">
         <span className="text-label-md text-text-secondary uppercase">Total de Delitos</span>
         <span className="text-headline-md text-text-primary">
           {kpis.total_delitos.toLocaleString("es-CO")}
@@ -81,7 +86,7 @@ export function KpisPanel() {
         </span>
       </div>
 
-      <div className="flex flex-col gap-0.5 border-l border-border pl-4">
+      <div className="flex flex-col gap-0.5 border-l border-border pl-4 shrink-0">
         <span className="text-label-md text-text-secondary uppercase">Delito Más Común</span>
         <span className="text-body-sm text-text-primary">{kpis.delito_mas_comun ?? "Sin datos"}</span>
         <span className="text-label-md text-text-secondary uppercase mt-1">Mes de Mayor Impacto</span>
@@ -91,7 +96,7 @@ export function KpisPanel() {
       </div>
 
       {donutData.length > 0 && (
-        <div className="flex items-center gap-2 border-l border-border pl-4">
+        <div className="flex items-center gap-2 border-l border-border pl-4 shrink-0">
           <div className="w-20 h-20 shrink-0">
             <ResponsiveContainer>
               <PieChart>

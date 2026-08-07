@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Sidebar } from "../features/filters/Sidebar";
 import { useAppStore } from "../shared/store/useAppStore";
 import { Header } from "./Header";
@@ -18,6 +18,14 @@ const EvolutionPanel = lazy(() =>
 );
 const RegionBreakdownPanel = lazy(() =>
   import("../features/breakdown/RegionBreakdownPanel").then((m) => ({ default: m.RegionBreakdownPanel })),
+);
+// Móvil (< md): reemplaza EvolutionPanel + RegionBreakdownPanel (que en
+// escritorio flotan uno abajo a ancho completo y el otro al lateral
+// derecho — no caben los dos a la vez en una pantalla angosta) por un
+// único bottom sheet colapsable con pestañas. Diseñado en Figma antes de
+// implementarse (Flow Screens, "... — Panel Inferior Expandido").
+const MobileInsightsSheet = lazy(() =>
+  import("../features/mobile/MobileInsightsSheet").then((m) => ({ default: m.MobileInsightsSheet })),
 );
 
 function MapCanvasSkeleton() {
@@ -40,6 +48,7 @@ function MapCanvasSkeleton() {
  */
 export function App() {
   const theme = useAppStore((state) => state.theme);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -47,9 +56,9 @@ export function App() {
 
   return (
     <div className="h-screen flex flex-col bg-surface-canvas text-text-primary">
-      <Header />
+      <Header onMenuClick={() => setMobileFiltersOpen(true)} />
       <div className="flex flex-1 min-h-0">
-        <Sidebar />
+        <Sidebar open={mobileFiltersOpen} onClose={() => setMobileFiltersOpen(false)} />
         <main className="flex-1 relative">
           <Suspense fallback={<MapCanvasSkeleton />}>
             <MapCanvas />
@@ -60,11 +69,25 @@ export function App() {
           <Suspense fallback={null}>
             <KpisPanel />
           </Suspense>
+          {/* Escritorio: EvolutionPanel + RegionBreakdownPanel flotan
+              siempre visibles. Móvil: un único MobileInsightsSheet los
+              reemplaza (ver arriba) — `hidden md:block` en vez de un
+              `<div>` posicionado evita que el `display:none` de móvil
+              rompa el `absolute` de cada panel contra `main` en
+              escritorio (el wrapper nunca establece su propio contexto
+              de posicionamiento). */}
+          <div className="hidden md:block">
+            <Suspense fallback={null}>
+              <EvolutionPanel />
+            </Suspense>
+            <Suspense fallback={null}>
+              <RegionBreakdownPanel />
+            </Suspense>
+          </div>
           <Suspense fallback={null}>
-            <EvolutionPanel />
-          </Suspense>
-          <Suspense fallback={null}>
-            <RegionBreakdownPanel />
+            <div className="md:hidden">
+              <MobileInsightsSheet />
+            </div>
           </Suspense>
         </main>
       </div>

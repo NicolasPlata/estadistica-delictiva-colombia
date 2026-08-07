@@ -30,12 +30,12 @@ describe("Sidebar", () => {
     // Zustand y produce "Maximum update depth exceeded" si no se usa una
     // referencia estable (ver EMPTY en DelitosMultiSelect/GrupoEdadSelect/
     // ArmaMedioSelect).
-    expect(() => render(<Sidebar />)).not.toThrow();
+    expect(() => render(<Sidebar open onClose={() => {}} />)).not.toThrow();
   });
 
   it("loads vocabulario on mount and lets the user select and remove a delito chip", async () => {
     const user = userEvent.setup();
-    render(<Sidebar />);
+    render(<Sidebar open onClose={() => {}} />);
 
     const delitosToggle = await screen.findByRole("button", { expanded: false });
     await user.click(delitosToggle);
