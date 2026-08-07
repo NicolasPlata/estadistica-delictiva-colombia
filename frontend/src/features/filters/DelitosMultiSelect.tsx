@@ -36,15 +36,18 @@ export function DelitosMultiSelect() {
             {opciones.map((delito) => (
               <label
                 key={delito}
-                className="flex items-center gap-2 px-2 py-1.5 text-body-sm text-text-primary hover:bg-surface-card-hover cursor-pointer"
+                className="flex items-start gap-2 px-2 py-1.5 text-body-sm text-text-primary hover:bg-surface-card-hover cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(delito)}
                   onChange={() => toggle(delito)}
-                  className="accent-accent-interactive"
+                  className="accent-accent-interactive shrink-0 mt-0.5"
                 />
-                <span className="truncate">{delito}</span>
+                {/* Sin truncate: la lista del propio select tenía el mismo
+                    problema que los chips — nombres largos cortados con
+                    "..." antes de poder leerlos para elegir. */}
+                <span className="min-w-0">{delito}</span>
               </label>
             ))}
           </div>
