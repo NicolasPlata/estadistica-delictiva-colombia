@@ -50,8 +50,8 @@ function EvolutionPanelSkeleton() {
 
 /** Panel de evolución (HU-3.02/HU-3.03/HU-3.04): línea mensual nacional
  * por defecto, barras anuales al aislar un territorio, y comparación
- * Serie A/B superpuesta en el mismo gráfico (nunca dos gráficos
- * separados). */
+ * Serie A/B (segunda región) superpuesta en el mismo gráfico (nunca dos
+ * gráficos separados). */
 export function EvolutionPanel() {
   const filters = useAppStore((s) => s.filters);
   const granularidad = useAppStore((s) => s.granularidad);
@@ -59,7 +59,6 @@ export function EvolutionPanel() {
   const clearSelectedRegion = useAppStore((s) => s.clearSelectedRegion);
   const comparisonMode = useAppStore((s) => s.comparisonMode);
   const comparisonRegion = useAppStore((s) => s.comparisonRegion);
-  const comparisonPeriodo = useAppStore((s) => s.comparisonPeriodo);
 
   const [evolution, setEvolution] = useState<Evolution | null>(null);
   const [comparisonEvolution, setComparisonEvolution] = useState<Evolution | null>(null);
@@ -81,14 +80,7 @@ export function EvolutionPanel() {
   }, [filters, selectedRegion, granularidad, agrupacion]);
 
   useEffect(() => {
-    const comparisonFilters = buildComparisonFilters(
-      filters,
-      comparisonMode,
-      selectedRegion,
-      comparisonRegion,
-      comparisonPeriodo,
-      granularidad,
-    );
+    const comparisonFilters = buildComparisonFilters(filters, comparisonMode, comparisonRegion, granularidad);
     if (!comparisonFilters) {
       setComparisonEvolution(null);
       return;
@@ -105,7 +97,7 @@ export function EvolutionPanel() {
     return () => {
       cancelled = true;
     };
-  }, [filters, comparisonMode, selectedRegion, comparisonRegion, comparisonPeriodo, granularidad]);
+  }, [filters, comparisonMode, comparisonRegion, granularidad]);
 
   if (!evolution) return <EvolutionPanelSkeleton />;
 
@@ -115,7 +107,7 @@ export function EvolutionPanel() {
     : `Evolución Mensual — ${evolution.region_label}`;
 
   const data = comparando
-    ? mergeEvolutionSeries(evolution.series, comparisonEvolution.series, comparisonMode as "region" | "periodo")
+    ? mergeEvolutionSeries(evolution.series, comparisonEvolution.series)
     : evolution.series.map((point) => ({ label: formatPeriodo(point.periodo, agrupacion), serieA: point.cantidad }));
 
   return (
@@ -146,7 +138,6 @@ export function EvolutionPanel() {
           <li className="flex items-center gap-1.5 text-label-md text-text-secondary normal-case">
             <span aria-hidden="true" className="w-2 h-2 rounded-full shrink-0 bg-comparacion-serie-b" />
             {comparisonEvolution.region_label}
-            {comparisonMode === "periodo" && ` (${comparisonPeriodo?.anioInicio}–${comparisonPeriodo?.anioFin})`}
           </li>
         </ul>
       )}

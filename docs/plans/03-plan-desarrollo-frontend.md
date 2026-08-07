@@ -99,6 +99,7 @@ El primer intento (un efecto que llamaba `map.moveLayer(id)` una sola vez cuando
 - **Clic en el mapa como selector de región (Hito 4.2/4.3):** no existe un dropdown de región en el sidebar — la única forma de elegir territorio es haciendo clic en el mapa, que resalta la región con `feature-state.selected`. En modo comparación "Por Región" (Hito 4.3), el mismo clic se redirige a elegir la Serie B en vez de reemplazar la Serie A.
 - **Alineación de series en la comparación (Hito 4.3):** "Por Región" comparte el mismo rango de años en ambas series, así que se alinea por el `periodo` real; "Por Periodo" compara rangos de años distintos, donde alinear por calendario no tiene sentido — se alinea por posición relativa ("Año 1", "Año 2"...), rellenando con cero la serie más corta (técnica "indexed to a common base" del skill de dataviz).
 - Los 3 hitos verificados con datos reales end-to-end (backend local + Playwright), no solo con mocks: total nacional (4.836.275, coincide con el conteo pre-rollup de la migración), caída real de criminalidad en 2020 visible en la línea mensual, comparación Tolima vs. Antioquia con magnitudes reales.
+- **(2026-08-07) Sub-modo "Por Periodo" retirado:** comparar dos rangos de años de la misma región no resultó útil en la práctica — el caso de uso real siempre compara el mismo periodo entre dos territorios. Se eliminó el selector, el estado (`comparisonPeriodo`) y la rama de alineación por posición relativa; queda solo "Por Región". Ver `BACKLOG.md` y HU-3.04 actualizada.
 
 ---
 

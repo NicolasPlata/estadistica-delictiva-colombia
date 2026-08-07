@@ -22,12 +22,7 @@ export interface SelectedRegion {
 }
 
 /** HU-3.04 — modo de comparación del panel de evolución (Serie A/B). */
-export type ComparisonMode = "off" | "region" | "periodo";
-
-export interface PeriodoRange {
-  anioInicio: number;
-  anioFin: number;
-}
+export type ComparisonMode = "off" | "region";
 
 interface AppState {
   theme: Theme;
@@ -66,10 +61,8 @@ interface AppState {
    * un `selectedRegion` (Serie A), así que se descarta con él. */
   comparisonMode: ComparisonMode;
   comparisonRegion: SelectedRegion | null;
-  comparisonPeriodo: PeriodoRange | null;
   setComparisonMode: (mode: ComparisonMode) => void;
   setComparisonRegion: (region: SelectedRegion) => void;
-  setComparisonPeriodo: (range: PeriodoRange) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -85,7 +78,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedRegion: null,
   comparisonMode: "off",
   comparisonRegion: null,
-  comparisonPeriodo: null,
 
   setTheme: (theme) =>
     set({ theme, basemap: defaultBasemapForTheme(theme) }),
@@ -99,21 +91,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   // entidad — un territorio aislado antes del cambio dejaría de tener
   // sentido, así que se descarta junto con la granularidad.
   setGranularidad: (granularidad) =>
-    set({ granularidad, selectedRegion: null, comparisonMode: "off", comparisonRegion: null, comparisonPeriodo: null }),
+    set({ granularidad, selectedRegion: null, comparisonMode: "off", comparisonRegion: null }),
 
   // Una región primaria nueva invalida cualquier comparación ya armada
   // contra la anterior (HU-3.04 vive "dentro" de la Serie A actual).
   setSelectedRegion: (region) =>
-    set({ selectedRegion: region, comparisonMode: "off", comparisonRegion: null, comparisonPeriodo: null }),
+    set({ selectedRegion: region, comparisonMode: "off", comparisonRegion: null }),
 
   clearSelectedRegion: () =>
-    set({ selectedRegion: null, comparisonMode: "off", comparisonRegion: null, comparisonPeriodo: null }),
+    set({ selectedRegion: null, comparisonMode: "off", comparisonRegion: null }),
 
-  setComparisonMode: (mode) => set({ comparisonMode: mode, comparisonRegion: null, comparisonPeriodo: null }),
+  setComparisonMode: (mode) => set({ comparisonMode: mode, comparisonRegion: null }),
 
   setComparisonRegion: (region) => set({ comparisonRegion: region }),
-
-  setComparisonPeriodo: (range) => set({ comparisonPeriodo: range }),
 
   loadVocabulario: async () => {
     set({ vocabularioStatus: "loading" });

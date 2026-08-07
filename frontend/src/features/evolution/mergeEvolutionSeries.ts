@@ -9,22 +9,16 @@ export interface ComparisonPoint {
 }
 
 /** Superpone dos series en un único dataset (HU-3.04: "un gráfico, no
- * dos"). "region" comparte el mismo rango de años, así que alinea por el
- * `periodo` real; "periodo" compara rangos de años distintos, así que
- * alinea por posición relativa ("Año 1", "Año 2"...) — comparar por
- * calendario no tendría sentido ahí (dataviz: "indexed to a common base"). */
-export function mergeEvolutionSeries(
-  serieA: EvolutionPoint[],
-  serieB: EvolutionPoint[],
-  mode: "region" | "periodo",
-): ComparisonPoint[] {
+ * dos"). Ambas series comparten el mismo rango de años (comparación por
+ * región), así que se alinean por el `periodo` real. */
+export function mergeEvolutionSeries(serieA: EvolutionPoint[], serieB: EvolutionPoint[]): ComparisonPoint[] {
   const length = Math.max(serieA.length, serieB.length);
 
   return Array.from({ length }, (_, index) => {
     const puntoA = serieA[index];
     const puntoB = serieB[index];
     return {
-      label: mode === "region" ? (puntoA?.periodo ?? puntoB?.periodo ?? "") : `Año ${index + 1}`,
+      label: puntoA?.periodo ?? puntoB?.periodo ?? "",
       serieA: puntoA?.cantidad ?? 0,
       serieB: puntoB?.cantidad ?? 0,
       periodoA: puntoA?.periodo ?? "",

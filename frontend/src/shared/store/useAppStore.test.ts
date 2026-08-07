@@ -171,12 +171,11 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().selectedRegion).toBeNull();
   });
 
-  it("defaults comparisonMode to 'off' with no comparison region/periodo (HU-3.04)", () => {
+  it("defaults comparisonMode to 'off' with no comparison region (HU-3.04)", () => {
     const state = useAppStore.getState();
 
     expect(state.comparisonMode).toBe("off");
     expect(state.comparisonRegion).toBeNull();
-    expect(state.comparisonPeriodo).toBeNull();
   });
 
   it("setComparisonMode switches modes", () => {
@@ -185,7 +184,7 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().comparisonMode).toBe("region");
   });
 
-  it("turning comparison off clears any comparison region/periodo already picked", () => {
+  it("turning comparison off clears any comparison region already picked", () => {
     useAppStore.getState().setComparisonMode("region");
     useAppStore.getState().setComparisonRegion({ codigoDane: 5, nombre: "ANTIOQUIA" });
 
@@ -194,21 +193,10 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().comparisonRegion).toBeNull();
   });
 
-  it("switching from 'region' to 'periodo' mode discards the comparison region", () => {
-    useAppStore.getState().setComparisonMode("region");
+  it("setComparisonRegion stores Serie B's pick", () => {
     useAppStore.getState().setComparisonRegion({ codigoDane: 5, nombre: "ANTIOQUIA" });
-
-    useAppStore.getState().setComparisonMode("periodo");
-
-    expect(useAppStore.getState().comparisonRegion).toBeNull();
-  });
-
-  it("setComparisonRegion/setComparisonPeriodo store Serie B's picks", () => {
-    useAppStore.getState().setComparisonRegion({ codigoDane: 5, nombre: "ANTIOQUIA" });
-    useAppStore.getState().setComparisonPeriodo({ anioInicio: 2015, anioFin: 2019 });
 
     expect(useAppStore.getState().comparisonRegion).toEqual({ codigoDane: 5, nombre: "ANTIOQUIA" });
-    expect(useAppStore.getState().comparisonPeriodo).toEqual({ anioInicio: 2015, anioFin: 2019 });
   });
 
   it("picking a new primary region resets any comparison already set up", () => {
@@ -224,12 +212,12 @@ describe("useAppStore", () => {
 
   it("clearing the selected region also resets comparison state", () => {
     useAppStore.getState().setSelectedRegion({ codigoDane: 11, nombre: "BOGOTÁ, D.C." });
-    useAppStore.getState().setComparisonMode("periodo");
-    useAppStore.getState().setComparisonPeriodo({ anioInicio: 2015, anioFin: 2019 });
+    useAppStore.getState().setComparisonMode("region");
+    useAppStore.getState().setComparisonRegion({ codigoDane: 5, nombre: "ANTIOQUIA" });
 
     useAppStore.getState().clearSelectedRegion();
 
     expect(useAppStore.getState().comparisonMode).toBe("off");
-    expect(useAppStore.getState().comparisonPeriodo).toBeNull();
+    expect(useAppStore.getState().comparisonRegion).toBeNull();
   });
 });

@@ -14,6 +14,16 @@ _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## ✅ Hecho
 
+**2026-08-07 — Eliminado el sub-modo "Por Periodo" de la comparación paralela (HU-3.04)**
+- Pedido del usuario: comparar dos rangos de años de la misma región no se usa en la práctica — el caso de uso real siempre compara el mismo periodo entre dos territorios distintos ("Por Región", que se conserva).
+- `useAppStore`: `ComparisonMode` pasa de `"off" | "region" | "periodo"` a `"off" | "region"`; se eliminan `comparisonPeriodo`, `setComparisonPeriodo` y el tipo `PeriodoRange`.
+- `ComparisonControls.tsx`: se quita el segmented control Por Región/Por Periodo y los selectores de años — "Comparar" ahora activa/desactiva el modo región directamente.
+- `buildComparisonFilters.ts`: se quita la rama de periodo y el parámetro `comparisonPeriodo`/`selectedRegion` (ya no se usaban fuera de esa rama).
+- `mergeEvolutionSeries.ts`: se quita el parámetro `mode` y la alineación por posición relativa ("Año 1", "Año 2"...) — solo queda la alineación por `periodo` real, que es la única que sigue existiendo.
+- `EvolutionPanel.tsx`: ajustado a la nueva firma de ambas funciones; la leyenda ya no muestra el rango de años de la Serie B.
+- HU-3.04 (`historias-usuario.md`) y Hito 4.3 (`03-plan-desarrollo-frontend.md`) actualizados con nota de la decisión, sin reescribir el historial de lo que se construyó originalmente.
+- Tests actualizados quitando los 4 casos de periodo (`buildComparisonFilters.test.ts`, `mergeEvolutionSeries.test.ts`, `useAppStore.test.ts`). 70/70 tests en verde, `tsc --noEmit` limpio.
+
 **2026-08-06 — Límite departamental siempre visible en el mapa (HU-1.04)**
 - Pedido del usuario: en la vista de Municipio se perdía toda referencia de a qué departamento pertenece cada municipio. Se agregó una capa independiente (`departamentos-limite`) que siempre carga y dibuja la geometría de `DEPARTAMENTO`, sin importar la granularidad activa — `useAppStore.loadGeometry("DEPARTAMENTO")` se llama incondicionalmente al montar el mapa (el cache fetch-once ya existente evita pedirla dos veces si la granularidad activa ya la cubre).
 - Nuevo token reservado `limite-departamental` (teal — `#047857` claro / `#0d9488` oscuro), la única familia de tono todavía libre entre las ya cargadas de significado en la app (rojo=choropleth, azul=selección, + comparación/género/estado). Documentado en `00-design-system.md` (Hallazgo adicional) con la validación de contraste correspondiente.
