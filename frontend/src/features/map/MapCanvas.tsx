@@ -9,13 +9,20 @@ import { BASEMAP_SOURCES } from "./basemapSources";
 import { buildChoroplethExpression, computeQuantileBreaks } from "./choropleth";
 import { toFeatureStateEntries } from "./featureState";
 import { type HoveredRegion, MapTooltip } from "./MapTooltip";
-import { readAccentColor, readBorderColor, readChoroplethRamp } from "./readDesignTokens";
+import {
+  readAccentColor,
+  readBorderColor,
+  readChoroplethRamp,
+  readLimiteDepartamentalColor,
+} from "./readDesignTokens";
 
 const GEOMETRY_SOURCE_ID = "regiones";
 const FILL_LAYER_ID = "regiones-fill";
 const LINE_LAYER_ID = "regiones-linea";
 const BASEMAP_SOURCE_ID = "basemap";
 const BASEMAP_LAYER_ID = "basemap";
+const DEPARTAMENTO_LIMITE_SOURCE_ID = "departamentos-limite";
+const DEPARTAMENTO_LIMITE_LAYER_ID = "departamentos-limite-linea";
 
 /** Colombia continental — centro y zoom que la deja completa en pantallas
  * de escritorio sin recortar Amazonas ni La Guajira. */
@@ -48,11 +55,20 @@ export function MapCanvas() {
   const previousSelectedId = useRef<number | null>(null);
 
   const geometry = geometryCache[granularidad];
+  const departamentoGeometry = geometryCache.DEPARTAMENTO;
   const source = BASEMAP_SOURCES[basemap];
 
   useEffect(() => {
     loadGeometry(granularidad);
   }, [granularidad, loadGeometry]);
+
+  // El límite departamental es una referencia siempre visible (HU-1.04),
+  // independiente de la granularidad activa — se carga aparte para que
+  // exista incluso viendo Municipio. `loadGeometry` ya evita el refetch si
+  // la granularidad activa ya la dejó cacheada.
+  useEffect(() => {
+    loadGeometry("DEPARTAMENTO");
+  }, [loadGeometry]);
 
   useEffect(() => {
     let cancelled = false;
@@ -173,6 +189,12 @@ export function MapCanvas() {
     [theme],
   );
 
+  const limiteDepartamentalColor = useMemo(
+    () => readLimiteDepartamentalColor(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [theme],
+  );
+
   // Estilo estático (nunca se recalcula): un objeto `mapStyle` nuevo le
   // indica a MapLibre que llame `setStyle`, lo que recarga el estilo
   // completo y destruye (y recrea) la fuente `regiones` — exactamente lo
@@ -262,6 +284,27 @@ export function MapCanvas() {
                   ["case", ["==", ["feature-state", "cantidad"], null], 0.4, 0.8],
                 ] as never,
                 "line-width": ["case", ["boolean", ["feature-state", "selected"], false], 3, 1] as never,
+              }}
+            />
+          </Source>
+        )}
+
+        {/* HU-1.04: límite departamental de referencia, siempre visible
+            encima de la capa anterior sin importar la granularidad activa
+            — sólida y de mayor grosor a propósito, para que se distinga
+            con claridad incluso sobre el enjambre de límites municipales. */}
+        {departamentoGeometry && (
+          <Source
+            id={DEPARTAMENTO_LIMITE_SOURCE_ID}
+            type="geojson"
+            data={departamentoGeometry}
+          >
+            <Layer
+              id={DEPARTAMENTO_LIMITE_LAYER_ID}
+              type="line"
+              paint={{
+                "line-color": limiteDepartamentalColor,
+                "line-width": 2,
               }}
             />
           </Source>

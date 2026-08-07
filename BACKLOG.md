@@ -14,6 +14,13 @@ _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## ✅ Hecho
 
+**2026-08-06 — Límite departamental siempre visible en el mapa (HU-1.04)**
+- Pedido del usuario: en la vista de Municipio se perdía toda referencia de a qué departamento pertenece cada municipio. Se agregó una capa independiente (`departamentos-limite`) que siempre carga y dibuja la geometría de `DEPARTAMENTO`, sin importar la granularidad activa — `useAppStore.loadGeometry("DEPARTAMENTO")` se llama incondicionalmente al montar el mapa (el cache fetch-once ya existente evita pedirla dos veces si la granularidad activa ya la cubre).
+- Nuevo token reservado `limite-departamental` (teal — `#047857` claro / `#0d9488` oscuro), la única familia de tono todavía libre entre las ya cargadas de significado en la app (rojo=choropleth, azul=selección, + comparación/género/estado). Documentado en `00-design-system.md` (Hallazgo adicional) con la validación de contraste correspondiente.
+- **Ajuste tras verificación visual:** el primer intento (línea discontinua, 1.5px) resultó casi ilegible a la escala de país completo — se cambió a línea sólida de 2px, que sí cumple "esta línea se debe ver" verificado con Playwright contra el backend real en ambos temas y ambas granularidades.
+- Nuevo criterio de aceptación agregado a HU-1.04 (`historias-usuario.md`) documentando el comportamiento.
+- 74/74 tests en verde (sin tests nuevos — es cableado visual de capas de MapLibre, no lógica de negocio), `tsc -b` y `oxlint` limpios.
+
 **2026-08-06 — Documentación: guía de comandos de desarrollo local**
 - Nuevo `docs/desarrollo-local.md`: prerrequisitos (versiones probadas de Rust/Node/Postgres), configuración inicial de `.env`, secuencia completa de base de datos desde cero (ETL → migraciones correctivas 0001/0002, en orden), comandos de backend/frontend, cómo levantar el stack completo (dev y contra el build de producción), y una tabla de referencia rápida.
 - Enlazado desde `README.md` (sección nueva "Desarrollo local"), `antigravity.md` (item 15 del índice de documentación) y desde `backend/README.md`/`frontend/README.md` (cada uno mantiene su propio bloque de comandos rápidos, apuntando a la guía completa para el panorama de base de datos + stack conjunto).

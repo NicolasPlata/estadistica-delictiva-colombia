@@ -118,5 +118,21 @@ Se probaron combinaciones de 3 slots de la paleta categórica default del skill 
 
 ---
 
+## ✅ Hallazgo adicional — límite departamental de referencia en el mapa (HU-1.04)
+
+**Problema:** en la vista de Municipio, el mapa solo dibuja los límites municipales (grises, HU-1.02) — el usuario pierde toda referencia visual de a qué departamento pertenece cada municipio, dificultando la lectura macro que HU-1.04 promete ("analizar los datos a nivel macro... sin importar el nivel de zoom"). No es un caso de paleta de datos (no codifica una magnitud/categoría/estado) — es una línea cartográfica fija de "chrome", así que no aplican los 4 checks categóricos del skill de dataviz punto por punto, pero sí se validó el único que importa para una línea decorativa: contraste contra la superficie real.
+
+**Resolución:** un único tono fijo (`limite-departamental`), reservado y no reutilizado en ningún otro rol — no puede ser rojo (choropleth/`status-critical`), azul (`accent-interactive`, ya usado para resaltar la región seleccionada de HU-3.03), ni ninguno de los tonos ya cargados de significado (comparación, género, estado). Se eligió **teal**, la única familia de tono todavía libre en la app:
+
+| Rol | Claro | Oscuro |
+|---|---|---|
+| `limite-departamental` | `#047857` | `#0d9488` |
+
+*Validación (`validate_palette.js --mode <light\|dark> --surface <superficie real>`, un solo color):* banda de luminosidad, piso de croma y contraste (≥3:1) en verde en ambos temas.
+
+**Regla de uso:** siempre visible sobre el mapa, en las dos granularidades — línea **sólida** (no discontinua: a la escala de país completo, un patrón discontinuo se vuelve ilegible) de 2px, por encima de la capa de límites municipales/departamentales normal. No es interactiva (sin hover/click propio) y nunca se reutiliza para otro propósito.
+
+---
+
 ## Tipografía, Radios y Espaciado
 Sin conflicto entre temas — se usan tal cual del frontmatter de cada archivo (`typography`, `rounded`, `spacing`). Único punto de atención: `DESIGN-dark.md` y `DESIGN-light.md` tienen escalas tipográficas ligeramente distintas (ej. dark trae `display-lg`/`headline-lg-mobile`/`code-sm`; light trae `headline-sm`/`data-mono` en su lugar). Al construir el mapeo a Tailwind, unificar el **nombre** de cada escala (`headline-sm`, etc.) entre ambos temas aunque el `fontSize`/`lineHeight` no cambie con el tema — la tipografía no debería variar por tema, solo el color.

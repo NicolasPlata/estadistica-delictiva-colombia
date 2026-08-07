@@ -33,3 +33,9 @@ export function readBorderColor(): string {
 export function readAccentColor(): string {
   return readCssVar("--accent-interactive");
 }
+
+/** Límite departamental de referencia, siempre visible sobre el mapa
+ * independientemente de la granularidad activa (HU-1.04). */
+export function readLimiteDepartamentalColor(): string {
+  return readCssVar("--limite-departamental");
+}

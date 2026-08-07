@@ -50,6 +50,12 @@
   --genero-masculino: #008300;
   --genero-femenino: #9085e9;
   --genero-no-reportado: #c98500;
+
+  /* Límite departamental en el mapa (Hallazgo adicional, HU-1.04) — un
+     único tono fijo, no una paleta de datos, así que no compite con
+     ningún rol reservado (choropleth=rojo, selección=azul, comparación,
+     género, estado). Teal: única familia de tono sin usar en la app. */
+  --limite-departamental: #0d9488;
 }
 
 :root[data-theme="light"] {
@@ -81,6 +87,8 @@
   --genero-masculino: #008300;
   --genero-femenino: #4a3aa7;
   --genero-no-reportado: #eda100;
+
+  --limite-departamental: #047857;
 }
 
 @theme {
@@ -117,6 +125,8 @@
   --color-genero-masculino: var(--genero-masculino);
   --color-genero-femenino: var(--genero-femenino);
   --color-genero-no-reportado: var(--genero-no-reportado);
+
+  --color-limite-departamental: var(--limite-departamental);
 
   /* Tipografía — escala canónica única (no varía por tema, solo el color) */
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;

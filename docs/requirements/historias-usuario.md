@@ -39,6 +39,7 @@ El siguiente documento detalla el comportamiento de la aplicación desde la pers
 * **Criterios de Aceptación:**
   - Debe haber un control claramente visible en el mapa o en los filtros para alternar entre ambos modos.
   - El cambio debe redibujar instantáneamente las geometrías (Vector Tiles) para reflejar la agregación delictiva al nivel seleccionado.
+  - Independientemente de la granularidad activa, el límite departamental debe permanecer visible como referencia geográfica constante — una línea de color distintivo (no el gris neutro de los límites municipales) que nunca desaparece, ni siquiera en la vista de Municipio.
 
 ### HU-1.05: Selector de Mapa Base
 **Como** analista de datos  
