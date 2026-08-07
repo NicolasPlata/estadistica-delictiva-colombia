@@ -106,6 +106,14 @@ mod tests {
         ) -> Result<HashMap<String, i64>, RepositoryError> {
             unimplemented!("no usado por los tests de get_evolution")
         }
+        async fn poblacion_promedio(
+            &self,
+            _anio_inicio: i32,
+            _anio_fin: i32,
+            _granularidad: crate::domain::granularidad::Granularidad,
+        ) -> Result<HashMap<String, f64>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_evolution")
+        }
     }
 
     #[tokio::test]

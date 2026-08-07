@@ -6,6 +6,7 @@ import type {
   FiltrosVocabulario,
   GlobalFilters,
   Granularidad,
+  Metrica,
   Theme,
 } from "../api/types";
 import { defaultBasemapForTheme } from "./theme";
@@ -31,6 +32,11 @@ interface AppState {
   /** HU-1.04 — nivel de agregación del choropleth, independiente de
    * `GlobalFilters` (no es un filtro, es el nivel geográfico de vista). */
   granularidad: Granularidad;
+  /** Fase 6 — unidad en la que se lee el choropleth (conteo absoluto o
+   * tasa por 100.000 hab.). Igual que `granularidad`, no es un filtro de
+   * qué datos traer sino de cómo se visualizan los mismos datos, así que
+   * vive fuera de `GlobalFilters`. */
+  metrica: Metrica;
   vocabulario: FiltrosVocabulario | null;
   vocabularioStatus: VocabularioStatus;
   setTheme: (theme: Theme) => void;
@@ -40,6 +46,7 @@ interface AppState {
    * filtro no borra los demás ya activos. */
   setFilters: (patch: GlobalFilters) => void;
   setGranularidad: (granularidad: Granularidad) => void;
+  setMetrica: (metrica: Metrica) => void;
   /** Carga el vocabulario de filtros (RF-05, HU-2.02/2.03) desde
    * `GET /api/v1/metadata/filtros` — se llama una vez al montar la app
    * (Hito 2.2). Nunca rechaza: un fallo de red deja `vocabularioStatus`
@@ -71,6 +78,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   basemap: defaultBasemapForTheme("dark"),
   filters: {},
   granularidad: "DEPARTAMENTO",
+  metrica: "ABSOLUTA",
   vocabulario: null,
   vocabularioStatus: "idle",
   geometryCache: {},
@@ -92,6 +100,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   // sentido, así que se descarta junto con la granularidad.
   setGranularidad: (granularidad) =>
     set({ granularidad, selectedRegion: null, comparisonMode: "off", comparisonRegion: null }),
+
+  setMetrica: (metrica) => set({ metrica }),
 
   // Una región primaria nueva invalida cualquier comparación ya armada
   // contra la anterior (HU-3.04 vive "dentro" de la Serie A actual).

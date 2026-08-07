@@ -42,6 +42,7 @@ export function MapCanvas() {
   const theme = useAppStore((s) => s.theme);
   const basemap = useAppStore((s) => s.basemap);
   const granularidad = useAppStore((s) => s.granularidad);
+  const metrica = useAppStore((s) => s.metrica);
   const filters = useAppStore((s) => s.filters);
   const geometryCache = useAppStore((s) => s.geometryCache);
   const loadGeometry = useAppStore((s) => s.loadGeometry);
@@ -72,7 +73,7 @@ export function MapCanvas() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchMapStats(filters, granularidad)
+    fetchMapStats(filters, granularidad, metrica)
       .then((stats) => {
         if (!cancelled) setMapStatsData(stats.data);
       })
@@ -84,7 +85,7 @@ export function MapCanvas() {
     return () => {
       cancelled = true;
     };
-  }, [filters, granularidad]);
+  }, [filters, granularidad, metrica]);
 
   // RN-09/HU-1.02: aplica las estadísticas ya cargadas sobre la geometría
   // ya cargada vía feature-state — nunca reconstruye la fuente/capa.
@@ -263,6 +264,7 @@ export function MapCanvas() {
     setHovered({
       nombre: feature.properties?.nombre_region ?? "Región desconocida",
       cantidad: typeof cantidad === "number" ? cantidad : null,
+      metrica,
       x: event.point.x,
       y: event.point.y,
     });

@@ -110,13 +110,14 @@ Todas las peticiones (a excepción de las capas vectoriales estáticas puras) ac
 
 ### 3.2 Obtener Estadísticas por Región (Dinámico, Liviano)
 **Ruta:** `POST /api/v1/map/stats`  
-**Propósito:** Retornar el conteo de delitos agregado por región, filtrado según `GlobalFilters`, listo para unirse en el cliente con la geometría ya cacheada (HU-1.02, HU-1.03, HU-1.04).
+**Propósito:** Retornar el conteo de delitos (o, desde la Fase 6, la tasa por 100.000 habitantes) agregado por región, filtrado según `GlobalFilters`, listo para unirse en el cliente con la geometría ya cacheada (HU-1.02, HU-1.03, HU-1.04).
 
 **Request Body:**
 ```json
 {
   "filters": { /* GlobalFilters */ },
-  "granularidad": "DEPARTAMENTO" // "DEPARTAMENTO" o "MUNICIPIO"
+  "granularidad": "DEPARTAMENTO", // "DEPARTAMENTO" o "MUNICIPIO"
+  "metrica": "ABSOLUTA" // (Opcional, default "ABSOLUTA") "ABSOLUTA" o "TASA" — Fase 6
 }
 ```
 
@@ -126,13 +127,15 @@ Todas las peticiones (a excepción de las capas vectoriales estáticas puras) ac
   "granularidad": "DEPARTAMENTO",
   "data": {
     "11": 240832,
-    "5": 583421,
+    "5": 583421.0,
     "76": 187654
-    // ... un par codigo_dane -> cantidad_delitos por cada región con datos ...
+    // ... un par codigo_dane -> valor por cada región con datos ...
   }
 }
 ```
 *Nota (RN-09 y ADR 0002): las regiones ausentes en `data` deben pintarse en el frontend con el color neutro/transparente definido en HU-1.02 — el backend no rellena ceros explícitos para regiones sin registros, para mantener el payload mínimo.*
+
+*Nota (Fase 6, RN-12): `data` es siempre numérico (`f64` en el backend) independientemente de `metrica` — con `"ABSOLUTA"` los valores son enteros exactos representados como número (ej. `240832`), con `"TASA"` son decimales ("delitos por cada 100.000 habitantes", ej. `312.4`). Con `metrica: "TASA"`, una región sin población conocida para el rango de años filtrado (`anio_inicio`/`anio_fin`, o el rango completo del dataset si no se especifican) se omite de `data` igual que una región sin registros delictivos — nunca se divide por cero.*
 
 *Nota de formato — crítica para el join en el cliente (evitar repetir el bug de `codigo_dane` ya corregido a nivel de base de datos):* cuando `granularidad = "DEPARTAMENTO"`, tanto esta clave como la propiedad `codigo_dane` de `GET /api/v1/map/geometry/DEPARTAMENTO` deben representar el código de **departamento** (1-2 dígitos, ej. `5` para Antioquia, `11` para Bogotá) **sin ceros a la izquierda** — no el código de municipio de 5 dígitos usado en `granularidad = "MUNICIPIO"`. Ambos endpoints deben producir exactamente el mismo valor/formato para la misma región, o el `setFeatureState` por `codigo_dane` en el cliente fallará silenciosamente (features sin match, choropleth vacío) exactamente como falló el join en la base de datos antes de la migración correctiva.
 

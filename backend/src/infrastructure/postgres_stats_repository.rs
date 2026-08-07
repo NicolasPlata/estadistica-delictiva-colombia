@@ -217,6 +217,50 @@ impl StatsRepository for PgStatsRepository {
             })
             .collect()
     }
+
+    async fn poblacion_promedio(
+        &self,
+        anio_inicio: i32,
+        anio_fin: i32,
+        granularidad: Granularidad,
+    ) -> Result<HashMap<String, f64>, RepositoryError> {
+        // dpto_codigo para Departamento, NUNCA codigo_dane — mismo criterio
+        // que map_stats (Hito 4.2). RN-13: la población departamental se
+        // deriva sumando los municipios (poblacion_municipal solo tiene
+        // granularidad municipal), y sobre esas sumas anuales se promedia
+        // entre anio_inicio/anio_fin (RN-12) — por linealidad, sumar antes
+        // de promediar da el mismo resultado que promediar antes de sumar,
+        // pero es más barato para Postgres (menos filas en el AVG externo).
+        let group_col = match granularidad {
+            Granularidad::Departamento => "codigo_dane / 1000",
+            Granularidad::Municipio => "codigo_dane",
+        };
+
+        let query = format!(
+            "SELECT codigo, AVG(poblacion_anual)::float8 AS promedio FROM (
+                SELECT {group_col} AS codigo, anio, SUM(poblacion) AS poblacion_anual
+                FROM poblacion_municipal
+                WHERE anio BETWEEN $1 AND $2
+                GROUP BY {group_col}, anio
+            ) por_anio
+            GROUP BY codigo"
+        );
+
+        let rows = sqlx::query(&query)
+            .bind(anio_inicio)
+            .bind(anio_fin)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| RepositoryError(e.to_string()))?;
+
+        rows.into_iter()
+            .map(|row| {
+                let codigo: i32 = row.try_get("codigo").map_err(|e| RepositoryError(e.to_string()))?;
+                let promedio: f64 = row.try_get("promedio").map_err(|e| RepositoryError(e.to_string()))?;
+                Ok((codigo.to_string(), promedio))
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -493,5 +537,61 @@ mod integration_tests {
             .unwrap();
 
         assert!(stats.is_empty());
+    }
+
+    #[tokio::test]
+    async fn poblacion_promedio_bogota_departamento_equals_bogota_municipio() {
+        // Misma invariante que map_stats_bogota_departamento_equals_bogota_municipio:
+        // Bogotá es su propio departamento Y su único municipio.
+        let repo = real_repo().await;
+
+        let por_depto = repo
+            .poblacion_promedio(2023, 2023, Granularidad::Departamento)
+            .await
+            .unwrap();
+        let por_municipio = repo
+            .poblacion_promedio(2023, 2023, Granularidad::Municipio)
+            .await
+            .unwrap();
+
+        assert_eq!(por_depto.get("11"), por_municipio.get("11001"));
+        assert!(por_depto.get("11").unwrap() > &0.0);
+    }
+
+    #[tokio::test]
+    async fn poblacion_promedio_averages_across_the_requested_year_range() {
+        let repo = real_repo().await;
+
+        let solo_2023 = repo
+            .poblacion_promedio(2023, 2023, Granularidad::Municipio)
+            .await
+            .unwrap();
+        let solo_2024 = repo
+            .poblacion_promedio(2024, 2024, Granularidad::Municipio)
+            .await
+            .unwrap();
+        let rango_2023_2024 = repo
+            .poblacion_promedio(2023, 2024, Granularidad::Municipio)
+            .await
+            .unwrap();
+
+        let promedio_esperado = (solo_2023.get("11001").unwrap() + solo_2024.get("11001").unwrap()) / 2.0;
+        assert_eq!(rango_2023_2024.get("11001"), Some(&promedio_esperado));
+    }
+
+    #[tokio::test]
+    async fn poblacion_promedio_excludes_codigo_dane_without_geometria_conocida() {
+        // 94663 (Guainía, "Área No Municipalizada") está en
+        // poblacion_municipal pero reporta 0 habitantes desde 2020 (ver
+        // scripts/migrations/0003_...) — RN-12 lo trata como sin dato, así
+        // que no debería aparecer con un promedio > 0 en el rango de la app.
+        let repo = real_repo().await;
+
+        let poblacion = repo
+            .poblacion_promedio(2020, 2025, Granularidad::Municipio)
+            .await
+            .unwrap();
+
+        assert_eq!(poblacion.get("94663"), Some(&0.0));
     }
 }

@@ -18,6 +18,7 @@ use crate::domain::filters::GlobalFilters;
 use crate::domain::granularidad::Granularidad;
 use crate::domain::kpis::Kpis;
 use crate::domain::map_stats::MapStats;
+use crate::domain::metrica::Metrica;
 use crate::domain::vocabulario::FiltrosVocabulario;
 
 /// Liveness check simple: si el proceso responde, está vivo.
@@ -99,21 +100,32 @@ pub async fn get_map_geometry(
 
 /// Body de `POST /api/v1/map/stats` (`02-api-contracts.md` §3.2) — mismo
 /// razonamiento que `EvolutionRequestBody`: forma de empaquetado del wire
-/// format de este endpoint, no un concepto de dominio.
+/// format de este endpoint, no un concepto de dominio. `metrica` es nuevo
+/// (Fase 6) y por defecto `Absoluta` (`#[serde(default)]` sobre un enum que
+/// implementa `Default`) — un cliente que no lo envíe conserva el
+/// comportamiento previo a esta fase, sin romper el contrato existente.
 #[derive(Debug, Deserialize)]
 pub struct MapStatsRequestBody {
     #[serde(default)]
     filters: GlobalFilters,
     granularidad: Granularidad,
+    #[serde(default)]
+    metrica: Metrica,
 }
 
 /// `POST /api/v1/map/stats` — ver `02-api-contracts.md` §3.2
-/// (HU-1.02/1.03/1.04).
+/// (HU-1.02/1.03/1.04, Fase 6 para `metrica`).
 pub async fn get_map_stats(
     State(state): State<AppState>,
     AppJson(body): AppJson<MapStatsRequestBody>,
 ) -> Result<Json<MapStats>, AppError> {
     Ok(Json(
-        get_map_stats_uc::execute(&state.stats_repo, &body.filters, body.granularidad).await?,
+        get_map_stats_uc::execute(
+            &state.stats_repo,
+            &body.filters,
+            body.granularidad,
+            body.metrica,
+        )
+        .await?,
     ))
 }

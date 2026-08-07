@@ -321,7 +321,110 @@ mod tests {
         let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["granularidad"], "DEPARTAMENTO");
-        // Bogotá, D.C.: dpto_codigo=11, sin ceros a la izquierda.
-        assert!(json["data"]["11"].as_i64().unwrap() > 0);
+        // Bogotá, D.C.: dpto_codigo=11, sin ceros a la izquierda. f64 (no
+        // as_i64): MapStats.data es f64 desde la Fase 6 para poder
+        // representar tasas decimales — ver domain/map_stats.rs.
+        assert!(json["data"]["11"].as_f64().unwrap() > 0.0);
+    }
+
+    /// Test de integración: `POST /api/v1/map/stats` con `metrica: "TASA"`
+    /// (Fase 6, RN-12) — confirma que el valor es la tasa por 100.000
+    /// habitantes, no el conteo absoluto, para una región real.
+    #[tokio::test]
+    async fn map_stats_endpoint_with_metrica_tasa_returns_a_rate_not_a_raw_count() {
+        let app = build_router(state_with_real_db().await);
+
+        let absoluta_response = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/map/stats")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({
+                            "filters": { "anio_inicio": 2023, "anio_fin": 2023 },
+                            "granularidad": "DEPARTAMENTO",
+                            "metrica": "ABSOLUTA"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let absoluta_body = absoluta_response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        let absoluta_json: serde_json::Value = serde_json::from_slice(&absoluta_body).unwrap();
+        let cantidad_bogota = absoluta_json["data"]["11"].as_f64().unwrap();
+
+        let tasa_response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/map/stats")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({
+                            "filters": { "anio_inicio": 2023, "anio_fin": 2023 },
+                            "granularidad": "DEPARTAMENTO",
+                            "metrica": "TASA"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(tasa_response.status(), axum::http::StatusCode::OK);
+        let tasa_body = tasa_response
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes();
+        let tasa_json: serde_json::Value = serde_json::from_slice(&tasa_body).unwrap();
+        let tasa_bogota = tasa_json["data"]["11"].as_f64().unwrap();
+
+        // La tasa (delitos por 100.000 hab.) es un número muy distinto del
+        // conteo absoluto (Bogotá tiene millones de habitantes) — esta
+        // aserción falla si `metrica` no tuvo ningún efecto real.
+        assert!(tasa_bogota > 0.0);
+        assert!(tasa_bogota < cantidad_bogota);
+    }
+
+    #[tokio::test]
+    async fn map_stats_endpoint_defaults_metrica_to_absoluta_when_omitted() {
+        let app = build_router(state_with_real_db().await);
+
+        let response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/map/stats")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(
+                        serde_json::json!({
+                            "filters": { "anio_inicio": 2023, "anio_fin": 2023 },
+                            "granularidad": "DEPARTAMENTO"
+                        })
+                        .to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), axum::http::StatusCode::OK);
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        // Sin metrica en el body, debe comportarse como ABSOLUTA (conteos
+        // en el orden de cientos de miles, no una tasa de 3 dígitos).
+        assert!(json["data"]["11"].as_f64().unwrap() > 1000.0);
     }
 }

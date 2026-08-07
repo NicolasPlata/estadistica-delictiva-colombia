@@ -5,6 +5,7 @@ import { DelitosMultiSelect } from "./DelitosMultiSelect";
 import { GeneroSegmentedControl } from "./GeneroSegmentedControl";
 import { GranularidadToggle } from "./GranularidadToggle";
 import { GrupoEdadSelect } from "./GrupoEdadSelect";
+import { MetricaToggle } from "./MetricaToggle";
 import { YearRangeSelect } from "./YearRangeSelect";
 
 export function Sidebar() {
@@ -18,6 +19,7 @@ export function Sidebar() {
   return (
     <aside className="w-72 shrink-0 h-full overflow-y-auto bg-surface-panel border-r border-border px-4 py-6 flex flex-col gap-5">
       <GranularidadToggle />
+      <MetricaToggle />
       <YearRangeSelect />
       <DelitosMultiSelect />
       <GeneroSegmentedControl />

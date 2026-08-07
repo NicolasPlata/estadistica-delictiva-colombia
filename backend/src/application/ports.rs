@@ -68,6 +68,21 @@ pub trait StatsRepository {
         filters: &GlobalFilters,
         granularidad: Granularidad,
     ) -> Result<HashMap<String, i64>, RepositoryError>;
+
+    /// `{codigo: población_promedio}` (Fase 6, RN-12) — promedio de
+    /// población entre `anio_inicio` y `anio_fin` (ambos inclusive),
+    /// agrupado igual que `map_stats` (`dpto_codigo`/`codigo_dane` según
+    /// `granularidad`, RN-13). Vive como método separado de `map_stats` en
+    /// vez de fusionarse en una sola consulta: mantiene `map_stats` sin
+    /// cambios (cero riesgo de regresión sobre RNF-03 ya medido) y deja la
+    /// fórmula de la tasa (RN-12) como código Rust explícito y testeable en
+    /// `application::get_map_stats`, no enterrada en SQL dinámico.
+    async fn poblacion_promedio(
+        &self,
+        anio_inicio: i32,
+        anio_fin: i32,
+        granularidad: Granularidad,
+    ) -> Result<HashMap<String, f64>, RepositoryError>;
 }
 
 /// Puerto para `GET /api/v1/map/geometry/{granularidad}` (ADR 0002): la

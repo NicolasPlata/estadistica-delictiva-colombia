@@ -50,8 +50,14 @@ export interface Evolution {
 
 export type Granularidad = "DEPARTAMENTO" | "MUNICIPIO";
 
+/** Unidad de `MapStats.data` (Fase 6) — `ABSOLUTA` es el conteo de
+ * delitos tal cual (default, sin cambios de contrato previos); `TASA` es
+ * delitos por cada 100.000 habitantes (RN-12 de `reglas-negocio.md`). */
+export type Metrica = "ABSOLUTA" | "TASA";
+
 /** Respuesta de POST /api/v1/map/stats — §3.2. Claves sin ceros a la
- * izquierda (código de depto o de municipio según granularidad). */
+ * izquierda (código de depto o de municipio según granularidad). El valor
+ * es un conteo entero o una tasa decimal según la `metrica` pedida. */
 export interface MapStats {
   granularidad: Granularidad;
   data: Record<string, number>;

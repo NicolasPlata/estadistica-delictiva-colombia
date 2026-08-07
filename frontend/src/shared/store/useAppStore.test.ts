@@ -72,6 +72,16 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().granularidad).toBe("MUNICIPIO");
   });
 
+  it("defaults metrica to ABSOLUTA (Fase 6)", () => {
+    expect(useAppStore.getState().metrica).toBe("ABSOLUTA");
+  });
+
+  it("setMetrica switches the toggle", () => {
+    useAppStore.getState().setMetrica("TASA");
+
+    expect(useAppStore.getState().metrica).toBe("TASA");
+  });
+
   it("defaults vocabulario status to 'idle' with no data", () => {
     const state = useAppStore.getState();
 
