@@ -10,9 +10,19 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 _(vacío — RF-09 resuelto el 2026-08-06, ver "Hecho")_
 
 ## 🔵 Próximo (en orden)
-- [ ] Frontend — Fase 4, Hito 4.3 (`docs/plans/03-plan-desarrollo-frontend.md`): comparación paralela por región/periodo (HU-3.04, RF-09), sobre el mismo `EvolutionPanel`.
+- [ ] Frontend — Fase 5 (`docs/plans/03-plan-desarrollo-frontend.md`): Hito 5.1 (reactividad ya cableada de facto desde la Fase 4 — revisar si queda algo pendiente) e Hito 5.2 (code splitting, TTV<2s, loaders).
+- [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica").
 
 ## ✅ Hecho
+
+**2026-08-06 — Frontend Fase 4, Hito 4.3: Comparación Paralela (HU-3.04, RF-09) — TDD, Fase 4 completa**
+- `useAppStore`: `comparisonMode`/`comparisonRegion`/`comparisonPeriodo` (TDD, 7 tests) — la comparación solo tiene sentido junto a un `selectedRegion` (Serie A), así que se descarta junto con él, junto con la granularidad, o al elegir una región primaria nueva.
+- `features/evolution/buildComparisonFilters.ts` (TDD): arma los filtros de la Serie B — "Por Región" reutiliza `buildEvolutionFilters` con la segunda región; "Por Periodo" mantiene la misma región de la Serie A pero sustituye el rango de años.
+- `features/evolution/mergeEvolutionSeries.ts` (TDD, 3 tests): superpone ambas series en un único dataset. "Por Región" alinea por el `periodo` real (mismo rango de años en las dos); "Por Periodo" alinea por posición relativa (`"Año 1"`, `"Año 2"`...) en vez de por calendario — comparar 2020-2022 contra 2015-2017 por año calendario no tendría sentido (dataviz: "indexed to a common base"). Rellena con cero la serie más corta en vez de recortar la más larga.
+- `MapCanvas.tsx`: mientras `comparisonMode === "region"`, un clic en el mapa elige la Serie B (`setComparisonRegion`) en vez de reemplazar la región primaria.
+- `ComparisonControls.tsx` + `EvolutionPanel.tsx`: control "Comparar", segmented control Por Región/Por Periodo, selector de años para "Por Periodo", gráfico de barras superpuesto con los tokens reservados `comparacion-serie-a/b` y leyenda propia (nunca la leyenda default de Recharts).
+- Verificado con datos reales end-to-end: Tolima vs. Antioquia por región (magnitudes reales, ~145K vs. ~607K/año), Tolima 2020-2025 vs. Tolima 2020-2022 por periodo (Serie B con menos barras que la A, alineada por posición, sin recortar la A).
+- 74/74 tests en verde, `tsc -b` y `oxlint` limpios. **Frontend Fase 4 (Dashboarding) completa.**
 
 **2026-08-06 — Frontend Fase 4, Hito 4.2: Gráfico de Evolución Regional (HU-3.02/HU-3.03) — TDD**
 - `shared/api/evolution.ts` (`fetchEvolution`, TDD) + `selectedRegion` en `useAppStore` (TDD, 4 tests): territorio aislado al hacer clic en el mapa, deliberadamente separado de `GlobalFilters` (no filtra el mapa/KPIs, solo enfoca el panel de evolución) y se limpia automáticamente al cambiar de granularidad (un `codigo_dane` de departamento y uno de municipio no son la misma entidad).

@@ -85,6 +85,15 @@ Igual que en el backend (ver `docs/plans/02-plan-desarrollo-backend.md`), la ló
     *   Sin cambios de backend: cada serie sale de su propia llamada a `POST /api/v1/stats/evolution` con un `GlobalFilters` independiente — el estado de comparación (Serie A/B) vive en el store del cliente.
     *   Superponer ambas series en el mismo gráfico (no dos gráficos separados) usando los tokens `comparacion-serie-a`/`comparacion-serie-b` de `docs/design/00-design-system.md` — reservados exclusivamente para este uso.
 
+**Estado: Fase 4 completa.** Notas de implementación y hallazgos reales:
+
+- **Recharts** (peer deps compatibles con React 19). KPIs y evolución se piden por separado (`shared/api/kpis.ts`, `evolution.ts`) — ninguno vive en `useAppStore`, ambos son estado local de sus paneles (mismo patrón que `MapCanvas`'s `mapStatsData`), reactivos a `GlobalFilters` vía `useEffect`.
+- **Gap real de diseño (Hito 4.1):** el donut de género necesitaba 3 colores categóricos que no reutilizaran `comparacion-serie-a/b` (reservados para HU-3.04) ni la familia roja (choropleth/`status-critical`). Se validaron combinaciones con `validate_palette.js --pairs all` hasta encontrar slots 4/6/7 (amarillo/verde/violeta) — documentado como Reconciliación 5 en `00-design-system.md`.
+- **`selectedRegion` vive fuera de `GlobalFilters` (Hito 4.2):** aislar un territorio para el panel de evolución (HU-3.03) no debe filtrar el mapa ni los KPIs — es estado propio en `useAppStore`, traducido a `departamento_id`/`municipio_id` solo al construir la petición de evolución (`buildEvolutionFilters`). Se limpia junto con la granularidad (un `codigo_dane` de departamento y uno de municipio no son la misma entidad).
+- **Clic en el mapa como selector de región (Hito 4.2/4.3):** no existe un dropdown de región en el sidebar — la única forma de elegir territorio es haciendo clic en el mapa, que resalta la región con `feature-state.selected`. En modo comparación "Por Región" (Hito 4.3), el mismo clic se redirige a elegir la Serie B en vez de reemplazar la Serie A.
+- **Alineación de series en la comparación (Hito 4.3):** "Por Región" comparte el mismo rango de años en ambas series, así que se alinea por el `periodo` real; "Por Periodo" compara rangos de años distintos, donde alinear por calendario no tiene sentido — se alinea por posición relativa ("Año 1", "Año 2"...), rellenando con cero la serie más corta (técnica "indexed to a common base" del skill de dataviz).
+- Los 3 hitos verificados con datos reales end-to-end (backend local + Playwright), no solo con mocks: total nacional (4.836.275, coincide con el conteo pre-rollup de la migración), caída real de criminalidad en 2020 visible en la línea mensual, comparación Tolima vs. Antioquia con magnitudes reales.
+
 ---
 
 ## Fase 5: Integración Total y Optimización (Polish)

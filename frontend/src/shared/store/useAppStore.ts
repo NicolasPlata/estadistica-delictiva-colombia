@@ -21,6 +21,14 @@ export interface SelectedRegion {
   nombre: string;
 }
 
+/** HU-3.04 — modo de comparación del panel de evolución (Serie A/B). */
+export type ComparisonMode = "off" | "region" | "periodo";
+
+export interface PeriodoRange {
+  anioInicio: number;
+  anioFin: number;
+}
+
 interface AppState {
   theme: Theme;
   basemap: Basemap;
@@ -54,6 +62,14 @@ interface AppState {
   selectedRegion: SelectedRegion | null;
   setSelectedRegion: (region: SelectedRegion) => void;
   clearSelectedRegion: () => void;
+  /** HU-3.04 — Serie B del panel de evolución, solo tiene sentido junto a
+   * un `selectedRegion` (Serie A), así que se descarta con él. */
+  comparisonMode: ComparisonMode;
+  comparisonRegion: SelectedRegion | null;
+  comparisonPeriodo: PeriodoRange | null;
+  setComparisonMode: (mode: ComparisonMode) => void;
+  setComparisonRegion: (region: SelectedRegion) => void;
+  setComparisonPeriodo: (range: PeriodoRange) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -67,6 +83,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   geometryCache: {},
   geometryStatus: {},
   selectedRegion: null,
+  comparisonMode: "off",
+  comparisonRegion: null,
+  comparisonPeriodo: null,
 
   setTheme: (theme) =>
     set({ theme, basemap: defaultBasemapForTheme(theme) }),
@@ -79,11 +98,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   // El codigo_dane de un departamento y el de un municipio no son la misma
   // entidad — un territorio aislado antes del cambio dejaría de tener
   // sentido, así que se descarta junto con la granularidad.
-  setGranularidad: (granularidad) => set({ granularidad, selectedRegion: null }),
+  setGranularidad: (granularidad) =>
+    set({ granularidad, selectedRegion: null, comparisonMode: "off", comparisonRegion: null, comparisonPeriodo: null }),
 
-  setSelectedRegion: (region) => set({ selectedRegion: region }),
+  // Una región primaria nueva invalida cualquier comparación ya armada
+  // contra la anterior (HU-3.04 vive "dentro" de la Serie A actual).
+  setSelectedRegion: (region) =>
+    set({ selectedRegion: region, comparisonMode: "off", comparisonRegion: null, comparisonPeriodo: null }),
 
-  clearSelectedRegion: () => set({ selectedRegion: null }),
+  clearSelectedRegion: () =>
+    set({ selectedRegion: null, comparisonMode: "off", comparisonRegion: null, comparisonPeriodo: null }),
+
+  setComparisonMode: (mode) => set({ comparisonMode: mode, comparisonRegion: null, comparisonPeriodo: null }),
+
+  setComparisonRegion: (region) => set({ comparisonRegion: region }),
+
+  setComparisonPeriodo: (range) => set({ comparisonPeriodo: range }),
 
   loadVocabulario: async () => {
     set({ vocabularioStatus: "loading" });

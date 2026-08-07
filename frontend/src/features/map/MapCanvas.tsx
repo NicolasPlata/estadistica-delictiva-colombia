@@ -40,6 +40,8 @@ export function MapCanvas() {
   const loadGeometry = useAppStore((s) => s.loadGeometry);
   const selectedRegion = useAppStore((s) => s.selectedRegion);
   const setSelectedRegion = useAppStore((s) => s.setSelectedRegion);
+  const comparisonMode = useAppStore((s) => s.comparisonMode);
+  const setComparisonRegion = useAppStore((s) => s.setComparisonRegion);
 
   const [mapStatsData, setMapStatsData] = useState<Record<string, number>>({});
   const [hovered, setHovered] = useState<HoveredRegion | null>(null);
@@ -133,10 +135,17 @@ export function MapCanvas() {
   function handleClick(event: MapLayerMouseEvent) {
     const feature = event.features?.[0];
     if (!feature?.properties) return;
-    setSelectedRegion({
+    const region = {
       codigoDane: feature.properties.codigo_dane,
       nombre: feature.properties.nombre_region,
-    });
+    };
+    // HU-3.04, modo "Por Región": mientras la comparación está activa, un
+    // clic elige la Serie B en vez de reemplazar la región primaria.
+    if (comparisonMode === "region") {
+      setComparisonRegion(region);
+    } else {
+      setSelectedRegion(region);
+    }
   }
 
   // `readChoroplethRamp`/`readBorderColor` leen `getComputedStyle`, que
