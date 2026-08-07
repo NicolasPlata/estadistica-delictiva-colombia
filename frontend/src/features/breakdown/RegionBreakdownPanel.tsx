@@ -38,12 +38,13 @@ function BreakdownSkeleton() {
   );
 }
 
-/** Panel de desglose de delitos por región (Fase 7, RN-04) — se abre al
- * seleccionar una región en el mapa (HU-3.03, mismo `selectedRegion` que
- * `EvolutionPanel`), en el lateral derecho del mapa (único cuadrante libre:
- * KPIs arriba, Evolución abajo con ancho completo). Filtrable por año con
- * un selector local (no vive en `GlobalFilters` ni en `useAppStore` — es
- * un refinamiento propio de este panel, mismo criterio que el resto de
+/** Panel de desglose de delitos (Fase 7, RN-04) — nacional por defecto
+ * (mismo criterio que `EvolutionPanel`, HU-3.02), y enfocado en la región
+ * elegida en el mapa cuando hay una (HU-3.03, mismo `selectedRegion`).
+ * Vive en el lateral derecho del mapa (único cuadrante libre: KPIs
+ * arriba, Evolución abajo con ancho completo). Filtrable por año con un
+ * selector local (no vive en `GlobalFilters` ni en `useAppStore` — es un
+ * refinamiento propio de este panel, mismo criterio que el resto de
  * estados "locales a un panel" ya establecidos en el proyecto). */
 export function RegionBreakdownPanel() {
   const filters = useAppStore((s) => s.filters);
@@ -59,12 +60,11 @@ export function RegionBreakdownPanel() {
   }, [selectedRegion]);
 
   useEffect(() => {
-    if (!selectedRegion) {
-      setBreakdown(null);
-      return;
-    }
-
     let cancelled = false;
+    // `selectedRegion === null` deja `buildBreakdownFilters` sin
+    // sobreescribir región (vista nacional) — no hace falta un `if`
+    // temprano para ese caso, es el mismo comportamiento que
+    // `buildEvolutionFilters` ya usa en `EvolutionPanel`.
     const breakdownFilters = buildBreakdownFilters(filters, selectedRegion, granularidad, anio);
     fetchBreakdown(breakdownFilters)
       .then((data) => {
@@ -78,7 +78,6 @@ export function RegionBreakdownPanel() {
     };
   }, [filters, selectedRegion, granularidad, anio]);
 
-  if (!selectedRegion) return null;
   if (!breakdown) return <BreakdownSkeleton />;
 
   const donutData = buildCategoriaDonutData(breakdown.por_categoria);
@@ -90,14 +89,16 @@ export function RegionBreakdownPanel() {
           <h2 className="text-label-md text-text-secondary uppercase">Desglose de Delitos</h2>
           <p className="text-headline-md text-text-primary">{breakdown.region_label}</p>
         </div>
-        <button
-          type="button"
-          onClick={clearSelectedRegion}
-          aria-label="Cerrar desglose"
-          className="flex items-center justify-center w-6 h-6 rounded-full text-text-secondary hover:bg-surface-card-hover shrink-0"
-        >
-          <X size={14} />
-        </button>
+        {selectedRegion && (
+          <button
+            type="button"
+            onClick={clearSelectedRegion}
+            aria-label="Volver a la vista nacional"
+            className="flex items-center justify-center w-6 h-6 rounded-full text-text-secondary hover:bg-surface-card-hover shrink-0"
+          >
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       <label className="flex flex-col gap-1.5 mb-4">
