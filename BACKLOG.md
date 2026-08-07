@@ -9,13 +9,26 @@ Convención: cada entrada de "Hecho" lleva fecha y, cuando aplica, el doc/commit
 ## 🔴 Decisiones pendientes del usuario
 - [ ] **Taxonomía de 8 categorías padre de delitos** para la gráfica de pastel de la Fase 7 (`docs/plans/04-plan-desarrollo-funcionalidades-v2.md`, Hito 7.1) — hay una propuesta borrador en ese documento (agrupación por título del Código Penal contra los 47 delitos reales), pero es contenido de dominio que requiere aprobación explícita antes de codificarse.
 - [ ] Nombre final del endpoint de desglose (`/api/v1/stats/breakdown` propuesto, Hito 7.2) — cosmético, no bloquea el resto del plan.
-- [ ] Orden de implementación entre Fase 6 (tasa per cápita) y Fase 8 (leyenda) — la leyenda debe reflejar la unidad activa (cantidad/tasa) si la Fase 6 ya existe cuando se aborde la Fase 8 (ver riesgo #7 del plan).
+
+_(Resuelto 2026-08-07: orden de implementación entre fases — el usuario pidió empezar "en orden", así que se ejecuta Fase 6 → Fase 7 → Fase 8 tal como quedaron numeradas en el plan, no el orden alternativo "8 primero" que el documento sugería como opción más rápida.)_
 
 ## 🔵 Próximo (en orden)
-- [ ] **Fases 6-8 de `docs/plans/04-plan-desarrollo-funcionalidades-v2.md`** (pendientes de iniciar, sin fecha comprometida): tasa de criminalidad per cápita usando `Data/Población/Población.xlsx` (Fase 6), tabla + gráfica de pastel de desglose por delito al hacer clic en una región (Fase 7), leyenda del mapa "oscuro = peligroso" (Fase 8) — ver el documento para el orden recomendado entre ellas.
+- [ ] **Fase 6, Hitos 6.4-6.7** (`docs/plans/04-plan-desarrollo-funcionalidades-v2.md`) — backend (endpoint con métrica tasa), frontend (toggle Cantidad Absoluta/Tasa), Figma, verificación end-to-end. Hitos 6.1-6.3 (ETL, migración, regla de negocio) ya completados, ver "Hecho".
+- [ ] Fase 7 (desglose por delito) y Fase 8 (leyenda) — sin iniciar, después de cerrar la Fase 6.
 - [ ] Deuda pendiente: sidebar sin colapsar en móvil (arrastrada desde Fase 2, ver "Deuda técnica") — único punto abierto conocido del alcance ya completado; el resto del plan de frontend (`docs/plans/03-plan-desarrollo-frontend.md`) está completo.
 
 ## ✅ Hecho
+
+**2026-08-07 — Fase 6, Hitos 6.1-6.3: ETL y esquema de población (`poblacion_municipal`)**
+- Pedido del usuario: empezar a implementar el plan "en orden" (Fase 6 primero), tomando las decisiones de diseño abiertas, y documentar con detalle cualquier cambio de base de datos.
+- Nuevo script `scripts/migracion_poblacion.py` (mismo patrón que `migracion_db.py`): carga `Data/Población/Población.xlsx` (hoja `PobMunicipalxÁrea`, filtrando `ÁREA GEOGRÁFICA='Total'`) a una tabla nueva `poblacion_municipal (codigo_dane, anio, poblacion)`, 28.075 filas (1.123 municipios × 25 años, 2018-2042).
+- Nueva migración `scripts/migrations/0003_poblacion_indices_y_validacion.sql` (mismo estándar narrativo que 0001/0002): tipos alineados con el resto del esquema (`INTEGER`, no el `BIGINT` que infiere pandas), `PRIMARY KEY (codigo_dane, anio)`, índice por `anio`, y un bloque `DO $$ ... RAISE EXCEPTION` que valida en la propia base de datos los hallazgos de la auditoría manual (no solo los deja en un comentario).
+- **Auditoría real de integridad, hecha contra la base de datos y el Excel antes de dar la carga por buena** (no asumida):
+  - El desfase de 1.123 municipios en población vs. 1.122 en `municipios_geo` (detectado al planificar la Fase 6) se resolvió con un diff exacto por `codigo_dane`: el único código de más es **94663** ("Mapiripana (ANM)", Guainía) — y es el **mismo código** que `scripts/migrations/0001_...` ya documentó como "sin equivalente real en el shapefile" al normalizar `estadistica_delictiva`. Dos fuentes de datos independientes (hechos delictivos y población) coinciden en el mismo código huérfano — confirma que es un caso real del DANE, no un error de este proyecto.
+  - La validación defensiva del ETL (rechazar población nula o negativa) encontró 29 filas con población = 0 y **casi las cargó rechazadas por error** hasta investigarlas: `27493` "Nuevo Belén de Bajirá" (Chocó) reporta 0 en 2018-2023 y población real desde 2024 (~29.812 hab.) — es un municipio segregado recientemente de Mutatá, con polígono real en `municipios_geo` y registros en `estadistica_delictiva`, simplemente sin población histórica antes de su creación formal. `94663` reporta 0 desde 2020 (sin polígono, ver punto anterior). Se ajustó el ETL para aceptar 0 como valor legítimo (solo rechaza `NULL`/negativos) — RN-12 ya trata población=0 igual que "sin fila": no se calcula tasa, nunca se divide por cero.
+- 3 nuevas reglas de negocio en `reglas-negocio.md`: RN-11 (fuente y alcance de la población — solo fila `Total`, cruce exclusivo por `codigo_dane`), RN-12 (fórmula de tasa per cápita: `SUM(cantidad) / AVG(poblacion) × 100.000` sobre el rango de años filtrado), RN-13 (nivel departamental derivado por `codigo_dane / 1000`, sin tabla separada).
+- Sanity check final: población nacional agregada 2020-2025 (50,4M → 53,1M) coincide con las cifras públicas del DANE para esos años.
+- Ejecutado contra la base de datos real de desarrollo (`estadistica_delictiva`, Postgres local) — no solo probado en abstracto.
 
 **2026-08-07 — Plan de desarrollo para 3 funcionalidades nuevas (Fases 6-8)**
 - Pedido del usuario: 3 cambios — (1) tasa de criminalidad per cápita usando proyecciones de población del DANE, (2) tabla + gráfica de pastel con el desglose de delitos al hacer clic en una región, filtrable por año, y (3) una leyenda en el mapa que indique "oscuro = peligroso". Se pidió explícitamente un plan de Fases/Hitos, incluyendo el diseño en Figma, no implementación todavía.
