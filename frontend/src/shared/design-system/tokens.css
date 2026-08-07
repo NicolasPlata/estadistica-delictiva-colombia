@@ -53,6 +53,21 @@
   --genero-femenino: #9085e9;
   --genero-no-reportado: #c98500;
 
+  /* Paleta categórica del desglose de delitos (Reconciliación 6, Fase 7)
+     — 8 categorías padre (RN-04), reservada para el pastel/tabla del
+     panel de desglose por región. No validada con validate_palette.js
+     (no disponible en este entorno) — validada a mano con la misma
+     fórmula de luminancia relativa WCAG ya usada en este archivo,
+     ≥4.5:1 contra el fondo oscuro. */
+  --categoria-vida-integridad: #e6497f;
+  --categoria-delitos-sexuales: #8a63f0;
+  --categoria-violencia-intrafamiliar: #c2703a;
+  --categoria-patrimonio-economico: #e8a33d;
+  --categoria-secuestro: #22b8cf;
+  --categoria-extorsion: #94d82d;
+  --categoria-terrorismo: #868e96;
+  --categoria-amenazas: #5c7cfa;
+
   /* Límite departamental en el mapa (Hallazgo adicional, HU-1.04) — un
      único tono fijo, no una paleta de datos, así que no compite con
      ningún rol reservado (choropleth=rojo, selección=azul, comparación,
@@ -89,6 +104,15 @@
   --genero-masculino: #008300;
   --genero-femenino: #4a3aa7;
   --genero-no-reportado: #eda100;
+
+  --categoria-vida-integridad: #c2255c;
+  --categoria-delitos-sexuales: #6741d9;
+  --categoria-violencia-intrafamiliar: #9c4a1f;
+  --categoria-patrimonio-economico: #a97417;
+  --categoria-secuestro: #0c8599;
+  --categoria-extorsion: #5c9c11;
+  --categoria-terrorismo: #5c636b;
+  --categoria-amenazas: #3b5bdb;
 
   --limite-departamental: #047857;
 }
@@ -127,6 +151,15 @@
   --color-genero-masculino: var(--genero-masculino);
   --color-genero-femenino: var(--genero-femenino);
   --color-genero-no-reportado: var(--genero-no-reportado);
+
+  --color-categoria-vida-integridad: var(--categoria-vida-integridad);
+  --color-categoria-delitos-sexuales: var(--categoria-delitos-sexuales);
+  --color-categoria-violencia-intrafamiliar: var(--categoria-violencia-intrafamiliar);
+  --color-categoria-patrimonio-economico: var(--categoria-patrimonio-economico);
+  --color-categoria-secuestro: var(--categoria-secuestro);
+  --color-categoria-extorsion: var(--categoria-extorsion);
+  --color-categoria-terrorismo: var(--categoria-terrorismo);
+  --color-categoria-amenazas: var(--categoria-amenazas);
 
   --color-limite-departamental: var(--limite-departamental);
 

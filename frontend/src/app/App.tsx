@@ -16,6 +16,9 @@ const KpisPanel = lazy(() =>
 const EvolutionPanel = lazy(() =>
   import("../features/evolution/EvolutionPanel").then((m) => ({ default: m.EvolutionPanel })),
 );
+const RegionBreakdownPanel = lazy(() =>
+  import("../features/breakdown/RegionBreakdownPanel").then((m) => ({ default: m.RegionBreakdownPanel })),
+);
 
 function MapCanvasSkeleton() {
   return (
@@ -59,6 +62,9 @@ export function App() {
           </Suspense>
           <Suspense fallback={null}>
             <EvolutionPanel />
+          </Suspense>
+          <Suspense fallback={null}>
+            <RegionBreakdownPanel />
           </Suspense>
         </main>
       </div>

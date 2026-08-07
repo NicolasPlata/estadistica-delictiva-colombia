@@ -125,6 +125,31 @@ impl StatsRepository for PgStatsRepository {
             .collect()
     }
 
+    async fn desglose_por_delito(
+        &self,
+        filters: &GlobalFilters,
+    ) -> Result<HashMap<String, i64>, RepositoryError> {
+        let mut qb = QueryBuilder::<Postgres>::new(
+            "SELECT delitos, COALESCE(SUM(cantidad), 0)::bigint AS total FROM estadistica_rollup",
+        );
+        apply_filters(&mut qb, filters);
+        qb.push(" GROUP BY delitos");
+
+        let rows = qb
+            .build()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| RepositoryError(e.to_string()))?;
+
+        rows.into_iter()
+            .map(|row| {
+                let delito: String = row.try_get("delitos").map_err(|e| RepositoryError(e.to_string()))?;
+                let total: i64 = row.try_get("total").map_err(|e| RepositoryError(e.to_string()))?;
+                Ok((delito, total))
+            })
+            .collect()
+    }
+
     async fn municipio_nombre(&self, codigo_dane: i32) -> Result<Option<String>, RepositoryError> {
         // Se consulta municipios_geo (la tabla de referencia geográfica),
         // no estadistica_delictiva — es la fuente correcta para un nombre,
@@ -350,15 +375,19 @@ mod where_clause_tests {
 mod integration_tests {
     use super::*;
     use crate::application::ports::StatsRepository;
+    use crate::domain::delito_categoria::categoria_de;
     use crate::domain::filters::GlobalFilters;
     use crate::infrastructure::{config::AppConfig, db};
 
-    async fn real_repo() -> PgStatsRepository {
+    async fn real_pool() -> sqlx::PgPool {
         let config = AppConfig::from_env();
-        let pool = db::build_pool(&config.database_url)
+        db::build_pool(&config.database_url)
             .await
-            .expect("requiere PostgreSQL corriendo con las credenciales de .env");
-        PgStatsRepository::new(pool)
+            .expect("requiere PostgreSQL corriendo con las credenciales de .env")
+    }
+
+    async fn real_repo() -> PgStatsRepository {
+        PgStatsRepository::new(real_pool().await)
     }
 
     #[tokio::test]
@@ -593,5 +622,29 @@ mod integration_tests {
             .unwrap();
 
         assert_eq!(poblacion.get("94663"), Some(&0.0));
+    }
+
+    /// Auditoría de la taxonomía de `domain::delito_categoria` (Fase 7,
+    /// Hito 7.1) contra los delitos reales de la base — no basta con que
+    /// compile; si algún valor real no coincide carácter por carácter con
+    /// el `match` (transcripción manual desde `psql`, ver
+    /// `docs/plans/04-plan-desarrollo-funcionalidades-v2.md`), este test lo
+    /// detecta antes de que el desglose por categoría silenciosamente
+    /// meta ese delito en "Otros".
+    #[tokio::test]
+    async fn every_real_delito_maps_to_a_known_categoria_not_otros() {
+        let pool = real_pool().await;
+        let delitos: Vec<String> = sqlx::query_scalar("SELECT DISTINCT delitos FROM estadistica_delictiva")
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+
+        assert_eq!(delitos.len(), 47, "se esperaban 47 delitos homologados (ver migración 0001)");
+
+        let sin_categoria: Vec<&String> = delitos.iter().filter(|d| categoria_de(d) == "Otros").collect();
+        assert!(
+            sin_categoria.is_empty(),
+            "delitos sin categoría conocida (revisar domain::delito_categoria): {sin_categoria:?}"
+        );
     }
 }

@@ -73,6 +73,28 @@ Todas las peticiones (a excepción de las capas vectoriales estáticas puras) ac
 }
 ```
 
+### 2.3 Obtener Desglose de Delitos por Región (Tabla + Gráfica de Pastel)
+**Ruta:** `POST /api/v1/stats/breakdown`  
+**Propósito:** Retornar el desglose de delitos de una región al hacer clic sobre ella en el mapa (Fase 6, RN-04). El body es `GlobalFilters` directamente (igual que §2.1) — la región va en `municipio_id`/`departamento_id`; el selector de año local del panel, si el usuario elige uno, sobreescribe `anio_inicio`/`anio_fin` antes de enviar (omitirlos = "todos los años", el rango global activo).
+
+**Request Body:** `GlobalFilters`
+
+**Response (`200 OK`):**
+```json
+{
+  "region_label": "ANTIOQUIA",
+  "por_delito": [
+    { "delito": "ARTICULO 239. HURTO PERSONAS", "categoria": "Delitos contra el Patrimonio Económico", "cantidad": 142031 },
+    { "delito": "ARTICULO 103. HOMICIDIO", "categoria": "Delitos contra la Vida e Integridad Personal", "cantidad": 5210 }
+  ],
+  "por_categoria": [
+    { "categoria": "Delitos contra el Patrimonio Económico", "cantidad": 198450 },
+    { "categoria": "Delitos contra la Vida e Integridad Personal", "cantidad": 12030 }
+  ]
+}
+```
+*Nota (RN-04):* `por_delito` trae el detalle completo (hasta 47 delitos homologados) ordenado descendente por `cantidad`, para alimentar una tabla ordenable en el cliente. `por_categoria` ya viene agregado por categoría padre (máximo 8, ver `docs/plans/04-plan-desarrollo-funcionalidades-v2.md` Hito 7.1) y ordenado descendente — pensado para alimentar la gráfica de pastel directamente, sin que el cliente necesite conocer la taxonomía. La suma de `cantidad` en cualquiera de los dos arreglos es igual a `total_delitos` de §2.1 para los mismos filtros.
+
 ---
 
 ## 3. Endpoints Geoespaciales

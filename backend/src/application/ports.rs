@@ -44,6 +44,15 @@ pub trait StatsRepository {
         filters: &GlobalFilters,
     ) -> Result<HashMap<String, i64>, RepositoryError>;
 
+    /// `{delito: cantidad}` (Fase 7) — mismo patrón que
+    /// `distribucion_genero`, agrupando por `delitos` en vez de `genero`.
+    /// La resolución de categoría padre (RN-04) ocurre en
+    /// `application::get_breakdown`, no aquí — este método solo agrega.
+    async fn desglose_por_delito(
+        &self,
+        filters: &GlobalFilters,
+    ) -> Result<HashMap<String, i64>, RepositoryError>;
+
     /// Nombre del municipio para un `codigo_dane`, o `None` si no existe
     /// (HU-3.03: título dinámico del gráfico de evolución regional).
     async fn municipio_nombre(&self, codigo_dane: i32) -> Result<Option<String>, RepositoryError>;

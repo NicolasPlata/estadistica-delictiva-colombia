@@ -63,6 +63,26 @@ export interface MapStats {
   data: Record<string, number>;
 }
 
+/** Fila de `Breakdown.por_delito` — Fase 7, RN-04. */
+export interface DelitoCantidad {
+  delito: string;
+  categoria: string;
+  cantidad: number;
+}
+
+/** Fila de `Breakdown.por_categoria` — ya agregado, lista para el pastel. */
+export interface CategoriaCantidad {
+  categoria: string;
+  cantidad: number;
+}
+
+/** Respuesta de POST /api/v1/stats/breakdown — §2.3 */
+export interface Breakdown {
+  region_label: string;
+  por_delito: DelitoCantidad[];
+  por_categoria: CategoriaCantidad[];
+}
+
 /** Tema de la aplicación (RNF-04: Dark es el default). */
 export type Theme = "dark" | "light";
 

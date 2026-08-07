@@ -124,6 +124,12 @@ mod tests {
         ) -> Result<HashMap<String, f64>, RepositoryError> {
             Ok(HashMap::from([("11".to_string(), 8_000_000.0)]))
         }
+        async fn desglose_por_delito(
+            &self,
+            _filters: &GlobalFilters,
+        ) -> Result<HashMap<String, i64>, RepositoryError> {
+            unimplemented!("no usado por los tests de get_map_stats")
+        }
     }
 
     #[tokio::test]

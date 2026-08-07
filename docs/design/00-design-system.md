@@ -118,6 +118,29 @@ Se probaron combinaciones de 3 slots de la paleta categórica default del skill 
 
 ---
 
+## ✅ Reconciliación 6 — Paleta categórica para el desglose de delitos (Fase 7, RN-04)
+
+**Problema:** el panel de desglose por región (tabla + gráfica de pastel al hacer clic en un territorio) necesita un color de identidad por cada una de las 8 categorías padre de delitos (RN-04, `docs/plans/04-plan-desarrollo-funcionalidades-v2.md` Hito 7.1) — es un caso categórico con más miembros que cualquier paleta ya reservada en la app (comparación=2, género=3), y con las familias rojo/azul/naranja/verde/morado/ámbar/teal ya cargadas de significado (choropleth, selección, comparación, género, estado, límite departamental), un set de 8 tonos frescos sin ningún solapamiento de familia era inviable.
+
+**Resolución:** 8 tonos espaciados alrededor de la rueda de color (rosa, violeta, terracota, dorado, cian, lima, gris pizarra, azul acero) — se acepta solapamiento de familia con paletas de otros gráficos (ej. el violeta se acerca a `genero-femenino`) porque **nunca se muestran en el mismo panel simultáneamente** (el pastel de delitos vive en su propio panel, aislado del donut de género y del gráfico de comparación). El requisito real es que las 8 categorías se distingan **entre sí**, no de tokens de otros contextos.
+
+*Validación:* no se usó `validate_palette.js` (no disponible en este entorno de desarrollo) — se validó a mano con la misma fórmula de contraste WCAG (luminancia relativa) ya usada en este documento para la rampa del choropleth. Los 8 tonos del tema oscuro pasan ≥4.5:1 contra `surface-canvas` oscuro (`#0b1326`); el tema claro necesitó variantes más oscuras/saturadas de los mismos matices (mismo patrón que género/comparación) para pasar ≥3:1 contra `surface-canvas` claro (`#f8f9ff`) — los valores directos del tema oscuro fallaban hasta 1.65:1 en claro.
+
+| Categoría | Claro | Oscuro |
+|---|---|---|
+| `categoria-vida-integridad` | `#c2255c` | `#e6497f` |
+| `categoria-delitos-sexuales` | `#6741d9` | `#8a63f0` |
+| `categoria-violencia-intrafamiliar` | `#9c4a1f` | `#c2703a` |
+| `categoria-patrimonio-economico` | `#a97417` | `#e8a33d` |
+| `categoria-secuestro` | `#0c8599` | `#22b8cf` |
+| `categoria-extorsion` | `#5c9c11` | `#94d82d` |
+| `categoria-terrorismo` | `#5c636b` | `#868e96` |
+| `categoria-amenazas` | `#3b5bdb` | `#5c7cfa` |
+
+**Regla de uso:** reservados para el panel de desglose de delitos (tabla + pastel) — no reutilizar en otro gráfico. Como con género, el pastel siempre lleva leyenda + etiquetas de texto, nunca depende solo del color para diferenciar categorías (accesibilidad para daltonismo con 8 categorías simultáneas, más miembros que el piso cómodo de discriminación por matiz).
+
+---
+
 ## ✅ Hallazgo adicional — límite departamental de referencia en el mapa (HU-1.04)
 
 **Problema:** en la vista de Municipio, el mapa solo dibuja los límites municipales (grises, HU-1.02) — el usuario pierde toda referencia visual de a qué departamento pertenece cada municipio, dificultando la lectura macro que HU-1.04 promete ("analizar los datos a nivel macro... sin importar el nivel de zoom"). No es un caso de paleta de datos (no codifica una magnitud/categoría/estado) — es una línea cartográfica fija de "chrome", así que no aplican los 4 checks categóricos del skill de dataviz punto por punto, pero sí se validó el único que importa para una línea decorativa: contraste contra la superficie real.

@@ -28,6 +28,10 @@ pub fn build_router(state: AppState) -> Router {
             post(handlers::get_evolution_stats),
         )
         .route(
+            "/api/v1/stats/breakdown",
+            post(handlers::get_breakdown_stats),
+        )
+        .route(
             "/api/v1/map/geometry/{granularidad}",
             get(handlers::get_map_geometry),
         )
@@ -152,6 +156,62 @@ mod tests {
         assert!(json["delito_mas_comun"].is_string());
         assert_eq!(json["mes_mayor_impacto"].as_str().unwrap().len(), 7);
         assert!(json["distribucion_genero"]["NO_REPORTADO"].is_number());
+    }
+
+    /// Test de integración: `POST /api/v1/stats/breakdown` (Fase 7) sobre
+    /// Antioquia — confirma la forma del contrato y que `por_delito`
+    /// suma exactamente lo mismo que `total_delitos` para los mismos
+    /// filtros (misma aserción cruzada que ya usa
+    /// `distribucion_genero_sums_to_the_same_total_as_total_delitos`).
+    #[tokio::test]
+    async fn breakdown_endpoint_returns_contract_shaped_json_and_sums_match_total() {
+        let app = build_router(state_with_real_db().await);
+        let filters = serde_json::json!({ "departamento_id": 5, "anio_inicio": 2023, "anio_fin": 2023 });
+
+        let kpi_response = app
+            .clone()
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/stats/kpi")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(filters.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let kpi_body = kpi_response.into_body().collect().await.unwrap().to_bytes();
+        let kpi_json: serde_json::Value = serde_json::from_slice(&kpi_body).unwrap();
+        let total_delitos = kpi_json["total_delitos"].as_i64().unwrap();
+
+        let breakdown_response = app
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/api/v1/stats/breakdown")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(filters.to_string()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(breakdown_response.status(), axum::http::StatusCode::OK);
+        let breakdown_body = breakdown_response.into_body().collect().await.unwrap().to_bytes();
+        let breakdown_json: serde_json::Value = serde_json::from_slice(&breakdown_body).unwrap();
+
+        assert_eq!(breakdown_json["region_label"], "ANTIOQUIA");
+        let por_delito = breakdown_json["por_delito"].as_array().unwrap();
+        let por_categoria = breakdown_json["por_categoria"].as_array().unwrap();
+        assert!(!por_delito.is_empty());
+        assert!(por_categoria.len() <= 8, "no debería haber más de 8 categorías padre (RN-04)");
+        assert!(por_delito[0]["delito"].is_string());
+        assert!(por_delito[0]["categoria"].is_string());
+
+        let suma_por_delito: i64 = por_delito.iter().map(|d| d["cantidad"].as_i64().unwrap()).sum();
+        let suma_por_categoria: i64 = por_categoria.iter().map(|c| c["cantidad"].as_i64().unwrap()).sum();
+        assert_eq!(suma_por_delito, total_delitos);
+        assert_eq!(suma_por_categoria, total_delitos);
     }
 
     #[tokio::test]

@@ -12,7 +12,8 @@ use super::error::AppError;
 use super::extractors::{AppJson, AppPath};
 use super::routes::AppState;
 use crate::application::get_map_stats as get_map_stats_uc;
-use crate::application::{get_evolution, get_filtros, get_geometry, get_kpis};
+use crate::application::{get_breakdown, get_evolution, get_filtros, get_geometry, get_kpis};
+use crate::domain::breakdown::Breakdown;
 use crate::domain::evolution::{Agrupacion, Evolution};
 use crate::domain::filters::GlobalFilters;
 use crate::domain::granularidad::Granularidad;
@@ -44,6 +45,20 @@ pub async fn get_kpi_stats(
     AppJson(filters): AppJson<GlobalFilters>,
 ) -> Result<Json<Kpis>, AppError> {
     Ok(Json(get_kpis::execute(&state.stats_repo, &filters).await?))
+}
+
+/// `POST /api/v1/stats/breakdown` (Fase 7) — desglose de delitos por
+/// región para la tabla + gráfica de pastel al hacer clic en un
+/// territorio. El body es `GlobalFilters` directamente, igual que
+/// `/stats/kpi`: la región va en `municipio_id`/`departamento_id`, y el
+/// selector de año local del panel (si el usuario elige uno) sobreescribe
+/// `anio_inicio`/`anio_fin` antes de enviar — "todos los años" es
+/// simplemente no enviar ese override.
+pub async fn get_breakdown_stats(
+    State(state): State<AppState>,
+    AppJson(filters): AppJson<GlobalFilters>,
+) -> Result<Json<Breakdown>, AppError> {
+    Ok(Json(get_breakdown::execute(&state.stats_repo, &filters).await?))
 }
 
 /// Body de `POST /api/v1/stats/evolution` (`02-api-contracts.md` §2.2) —
